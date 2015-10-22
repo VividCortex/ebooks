@@ -236,13 +236,14 @@
 	Page \thepage%
 }
 \lfoot{%
-	\vmiddle{\includegraphics[height=0.4in]{vividcortex_logo}}%
-	\hspace{0.3in}%
+	\vmiddle{\includegraphics[height=0.2in]{vividcortex_logo}}%
+}
+\cfoot{%
 	\fntheadfoot%
-	Copyright \textcopyright  2015 VividCortex%
+	\vmiddle{Copyright \textcopyright VividCortex}%
 }
 \rfoot{%
-	\vmiddle{\includegraphics[height=0.2in]{copyright}}%
+	\vmiddle{\includegraphics[height=0.2in]{img/by-nc-nd}}%
 }
 \renewcommand{\headrulewidth}{0pt}
 \let\oldfoot\footrule

@@ -3,25 +3,25 @@
 %% Required to build cover page
 \title{Everything You Need To Know About}{Queueing Theory}
 \date{\today}
-\cover{back_cover}
+\cover{queueing-theory/cover}
 
 %% Required to build "Meet the Author"
-\author{Baron Schwartz}{author_image}
+\author{Baron Schwartz}{img/baron}
 
 %% Required image for "About VividCortex"
-\aboutvc{about_image}
+\aboutvc{img/presenter}
 
 %% Required resource info
 \resourceleft%
-	{The Strategic IT Manager's Guide To Building A Scalable DBA Team}%		Resource 1 Title
-	{}%		Resource 1 Info
-	{scalable-dba-team}%	Resource 1 Image
-	{https://www.vividcortex.com/resources/building-scalable-dba-team/}%	Resource 1 url
+	{The Strategic IT Manager's Guide To Building A Scalable DBA Team}
+	{}
+	{img/scalable-dba-team}
+	{https://www.vividcortex.com/resources/building-scalable-dba-team/}
 \resourceright%
-	{Case Study: SendGrid}%		Resource 2 Title
-	{VividCortex has been instrumental in finding issues. It's the go-to solution for seeing what's happening in production systems.}%	Resource 2 Info
-	{sendgrid-thumbnail}%	Resource 2 Image
-	{https://www.vividcortex.com/resources/case-studies/sendgrid/}%	Resource 2 url
+	{Case Study: SendGrid}
+	{VividCortex has been instrumental in finding issues. It's the go-to solution for seeing what's happening in production systems.}
+	{img/sendgrid-thumbnail}
+	{https://www.vividcortex.com/resources/case-studies/sendgrid/}
 
 \begin{document}
 \maketitle		% Build the cover page
@@ -95,7 +95,7 @@ In particular, human intuition is {\itshape linear}. Double the traffic, we thin
 The classic example you might recognize is the so-called hockey-stick curve. We need a picture to break up all this text, so I'll introduce that now. This is the most famous queueing theory picture of all time:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{hockey-stick-1}
+\includegraphics[width=.75\linewidth]{queueing-theory/hockey-stick-1}
 \end{center}
 
 This curve shows how a system's total response time increases as utilization increases. As utilization approaches 100\%, response time goes to infinity. The exact shape of this curve depends on the characteristics of the system and the work it's doing, but the general principle applies to pretty much all systems.
@@ -179,13 +179,13 @@ These are abstract concepts that can be extended to every situation. There are a
 Queueing theory views every system as interconnected sets of servers and queues, through which customers flow. Graphically, queues are represented as a set of stacked boxes, and servers/stations are shown as circles.  The simplest possible system is a single queue leading to a single server:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{queue-and-server}
+\includegraphics[width=.375\linewidth]{queueing-theory/queue-and-server}
 \end{center}
 
 However, it's possible to have a variety of configurations, such as 1-to-many, many-to-many, many one-to-one, and chained systems:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{queue-configurations}
+\includegraphics[width=.75\linewidth]{queueing-theory/queue-configurations}
 \end{center}
 
 Once you're aware of this framework, you can decompose any system into networks of queues and servers and analyze them individually or separately.
@@ -256,7 +256,7 @@ Another extremely important equation is the relationship between residence time,
 Residence time in a queueing system is usually what you'd think of as response time or latency. As this equation shows, it's the sum of two components.  Here's our earlier diagram showing the components again:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{hockey-stick-1}
+\includegraphics[width=.75\linewidth]{queueing-theory/hockey-stick-1}
 \end{center}
 
 The dashed line in this chart is the service time, which is a floor on how quickly a request will complete, on average. Even with zero queueing, the service time takes some minimal amount of time. The wait time in the queue is responsible for the hockey stick curve. Later I'll show you how to calculate that.
@@ -296,7 +296,7 @@ These letters mean the following.
 The exponential distribution is very common in queueing analysis. Not only does it seem to describe real-world systems quite often, but it has nice mathematical properties that simplify analysis, and it's the safest bet when the real distribution is unknown. If you're not familiar with it, here's a chart of the exponential distribution's probability density function (PDF):\footnote{The PDF is what you get when you plot a histogram of a distribution.}
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{exp}
+\includegraphics[width=.75\linewidth]{queueing-theory/exp}
 \end{center}
 
 Most of the time you'll work with M/M/m queuing systems. Lots of real-life situations are known to result in independent and randomly spaced arrivals, and it's usually a pretty safe default assumption unless you know otherwise. And if you think about it, lots of real-life service times are sort of exponentially distributed too, with most jobs completing pretty quickly but occasional outliers taking a long time.
@@ -430,7 +430,7 @@ This illustrates the effect of specialization. In the combined-queue configurati
 In general, having lots of servers serving each queue pushes the so-called ``knee'' of the hockey stick curve toward higher utilization, letting you utilize resources better. Here's a graphic illustration of the effect:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{multi-q}
+\includegraphics[width=.75\linewidth]{queueing-theory/multi-q}
 \end{center}
 
 This chart plots the response time curves of a systems with 1, 2, 4, 32, and 64 servers. The many-server curves remain flat far longer than the others. You can explore this chart on \href{https://www.desmos.com/calculator/iwaj9vujiu}{Desmos} if you like.
