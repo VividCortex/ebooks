@@ -1,5 +1,5 @@
 %--------------------------------------
-%% Document class vivid_layout.cls designed by Nadia Barnard
+%% Document class vivid_layout_pdf.cls designed by Nadia Barnard
 %% for Baron Schwartz of VividCortex
 %--------------------------------------
 %% Preliminaries
@@ -8,7 +8,7 @@
 \NeedsTeXFormat{LaTeX2e}
 % Name and label class
 \ProvidesClass{vivid_layout}%
-	[2015/10/14 Custom document layout for VividCortex]
+	[2015/10/23 Custom document layout for VividCortex]
 
 %--------------------------------------
 %% Initial Document Setup
@@ -31,7 +31,7 @@
 	\footskip=0.8in
 	\paperwidth=8.5in
 	\paperheight=11in
-% Set size of print paper, show crop marks
+	% Set size of print paper, show crop marks
 \RequirePackage[noinfo,cam,center,width=9truein,height=11.5truein]{crop}
 
 %---------------------------------------
@@ -48,7 +48,7 @@
 \RequirePackage{colortbl}	% Shade tables
 \RequirePackage{array}		% Align tabular cells
 \RequirePackage{amsmath}	% Refine equation environment
-\RequirePackage[hyperfootnotes=false, colorlinks=true, urlcolor=vividblue]{hyperref}	% Add hyperlinks
+\RequirePackage[hyperfootnotes=false, colorlinks=true, urlcolor=vividblue, linkcolor=vividgray]{hyperref}	% Add hyperlinks
 \RequirePackage[framemethod=TikZ]{mdframed}		% Frame text
 \RequirePackage{titletoc}	% Cutomise table of contents
 \RequirePackage{float}		% Define section float type
@@ -187,6 +187,7 @@
 % Section Head
 \newcommand{\fntsection}{%
 	\color{vividblue}%
+	\raggedright%
 	\fontsize{24.88pt}{24.88pt}%
 	\selectfont}
 
@@ -240,24 +241,20 @@
 	Page \thepage%
 }
 \lfoot{%
-	\vmiddle{\includegraphics[height=0.4in]{vividcortex_logo}}%
-	\hspace{0.3in}%
-	\fntheadfoot%
-	Copyright \textcopyright  2015 VividCortex%
+	\vmiddle{\includegraphics[height=0.35in]{vividcortex_logo}}%
+}
+\cfoot{%
+	\vmiddle{\fntheadfoot%
+	Copyright \textcopyright\,2015 VividCortex}%
 }
 \rfoot{%
-	\vmiddle{\includegraphics[height=0.2in]{copyright}}%
+	\vmiddle{\includegraphics[height=0.15in]{copyright}}%
 }
 \renewcommand{\headrulewidth}{0pt}
 \let\oldfoot\footrule
 \renewcommand{\footrule}{\color{vividbox}\oldfoot}
 \renewcommand{\footrulewidth}{1pt}
-\renewcommand{\footruleskip}{0.2in}
-
-\abovedisplayskip=20pt
-\belowdisplayskip=20pt
-\abovedisplayshortskip=6pt
-\belowdisplayshortskip=20pt
+\renewcommand{\footruleskip}{0.1in}
 
 %-------------------------------------
 %% Front Cover
@@ -274,7 +271,7 @@
   	\AddToShipoutPictureBG*{%
   		\tikz[remember picture,overlay]%
   		\node at (current page.center)%
-  		{\includegraphics[keepaspectratio]{\@cover}};
+  		{\includegraphics[keepaspectratio, scale=1]{\@cover}};
   	}
   	
 	\centering
@@ -335,8 +332,6 @@
 %-------------------------------------
 %% TOC
 
-\let\Hy@linktoc\Hy@linktoc@none		% Remove hyperlinks from toc
-
 \fancypagestyle{toc}{%
 	\rhead{}%
 }
@@ -365,19 +360,20 @@
 %-------------------------------------
 %% Section Head
 
-\newfloat{secfloat}{H}{sfl}[section]
-	\setlength{\intextsep}{0.5in}
+\newfloat{secfloat}{H}{sfl}
+	\setlength{\intextsep}{0.3in}
 
 \renewcommand{\section}[1]{%
+	\phantomsection
 	\addcontentsline{toc}{section}{#1}%
 	\begin{secfloat}{}%
 		\begin{adjustwidth}{-1.4in}{0in}%
-			\vmiddle{\includegraphics[width=1.2in,height=0.4in]{section}}%
-			\hspace{0.2in}%
-			{\fntsection #1}%
+		\begin{tabular}{@{}p{1.2in}@{} @{}p{0.2in}@{} @{}>{\raggedright\setlength{\baselineskip}{1.8\baselineskip}}p{\textwidth}@{}}
+			\smash{\raisebox{-\height}{\includegraphics[width=1.2in,height=0.4in]{section}}} && {\fntsection #1} \\
+		\end{tabular}
 		\end{adjustwidth}%
 	\end{secfloat}%
-	\vspace*{-0.8in}%
+	\vspace{-1in}%
 }
 
 %-------------------------------------
@@ -447,8 +443,8 @@
 \mdfdefinestyle{mdfquote}{%
 	innerleftmargin=0.3in,%
 	innerrightmargin=0.3in,%
-	innertopmargin=0.3in,%
-	innerbottommargin=0.3in,%
+	innertopmargin=0.25in,%
+	innerbottommargin=0.25in,%
 	skipabove=14pt,%
 	skipbelow=14pt,%
 	backgroundcolor=vividbox,%

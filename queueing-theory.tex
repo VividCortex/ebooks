@@ -2,7 +2,7 @@
 
 %% Required to build cover page
 \title{Everything You Need To Know About}{Queueing Theory}
-\date{\today}
+\date{\today{} \textbullet{} Revision 2}
 \cover{queueing-theory/cover}
 
 %% Required to build "Meet the Author"
@@ -26,7 +26,7 @@
 \begin{document}
 \maketitle		% Build the cover page
 \begin{bio}		% Biographical info for "Meet the Author"
-Baron is a database expert who is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. An engineer by training, Baron has spent his career studying how teams build reliable, high performance systems, and has helped build and optimize database systems for some of the largest Internet properties. Baron has applied his systems thinking skills to both computer systems and teams of people, and has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron was an early employee at Percona, where he managed teams including consulting, support, training, and software engineering. Baron has a degree in Computer Science from the University of Virginia.
+Baron is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. Baron has helped build and optimize database systems for some of the largest Internet properties. He has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron managed consulting, support, training, and software engineering at Percona. He has a CS degree from the University of Virginia.
 \end{bio}
 \tableofcontents	% Build the table of contents
 
@@ -100,7 +100,7 @@ The classic example you might recognize is the so-called hockey-stick curve. We 
 
 This curve shows how a system's total response time increases as utilization increases. As utilization approaches 100\%, response time goes to infinity. The exact shape of this curve depends on the characteristics of the system and the work it's doing, but the general principle applies to pretty much all systems.
 
-You'll get familiar with nonlinearity over the course of this book. You might never be able to accurately estimate *how much* things will be nonlinear. But you'll get pretty good at recognizing situations where someone needs to check whether bad stuff is going to happen. Then you'll do a little bit of math or look things up in a table and find the answers you need.
+You'll get familiar with nonlinearity over the course of this book. You might never be able to accurately estimate {\itshape how much} things will be nonlinear. But you'll get pretty good at recognizing situations where someone needs to check whether bad stuff is going to happen. Then you'll do a little bit of math or look things up in a table and find the answers you need.
 
 \section{Queueing Systems in Real Life}	% A section heading
 
@@ -190,13 +190,7 @@ However, it's possible to have a variety of configurations, such as 1-to-many, m
 
 Once you're aware of this framework, you can decompose any system into networks of queues and servers and analyze them individually or separately.
 
-\section{Queueing and Performance}
-
-You're not interested in queueing theory for the sake of knowledge. Well, maybe you are, but let's pretend you're interested in practical things such as using queueing theory to understand system performance. What can you measure, analyze and predict about a queueing system?
-
-The results you'll get from queueing theory are mostly about long-term averages in stable systems that reach equilibrium. A stable system is one that is able to keep up with all the incoming work, so all customers eventually get serviced, and queues don't grow to infinity.
-
-There are a variety of important metrics and parameters:
+Now that you know that, what can you measure, analyze and predict about a queueing system?  There are a variety of important metrics and parameters:
 \begin{table}{X[-1,l,m]|X[-1,l,m]|X[-1,c,m]|X[-3,l,m]}
 {\bfseries Metrics} & {\bfseries Units} & {\bfseries Symbol} & {\bfseries Description} \\
 Arrival Rate & Customers per time & $\lambda$ or $A$ & How often new customers arrive at the front of the queue. In a stable system that will reach equilibrium, this is the same as the completion rate, also called the throughput (sometimes denoted $X$). \\
@@ -213,32 +207,29 @@ Number of Servers & Servers & $M$ & The number of servers the system has (e.g. c
 
 You will find many different names used to describe some of these. There is no universal standard for naming or symbols, and I have only listed some of the most common ones. You will find others in use, such as sojourn times and delays, sometimes ambiguously. You'll also find different letters and symbols; for example, sometimes $s$ is the symbol for the number of servers.
 
-Many of these parameters are related through a set of simple laws that are easy to understand. (Parts of queueing theory actually do make sense!) The most important of these is Little's Law, which explains the relationship between a few of the key metrics. It is important to note that Little's Law applies only to stable systems. In general, and with no further assumptions needed about any of the metrics, Little's Law states that
+The results you'll get from queueing theory are mostly about long-term averages in stable systems that reach equilibrium. A stable system is one that is able to keep up with all the incoming work, so all customers eventually get serviced, and queues don't grow to infinity.
 
+Many of these parameters are related through a set of simple laws that are easy to understand. (Parts of queueing theory actually do make sense!) The most important of these is Little's Law, which explains the relationship between a few of the key metrics. It is important to note that Little's Law applies only to stable systems. In general, and with no further assumptions needed about any of the metrics, Little's Law states that
 \[
    L = \lambda R
 \]
 
 In words, concurrency (the number of customers in the system) is arrival rate\footnote{Or throughput, or departures; in a stable system these are equal in the long term.} times residence time. This relationship can be solved for different variables and used to analyze all or part of a queueing system. For example, you can analyze just the queue:
-
 \[
   L_q = \lambda  W_q
 \]
 
 You will find Little's Law in different guises absolutely everywhere. Another useful relationship is the Utilization Law, which states that utilization is throughput times service time:
-
 \[
  \rho = \lambda  S
 \]
 
 Or, if you have $M$ number of servers,
-
 \[
  \rho = \frac{ \lambda S }{M}
 \]
 
 Another way to compute utilization:
-
 \[
  \rho = \frac{\lambda}{ \mu}
 \]
@@ -248,7 +239,6 @@ Although they're simple, these formulas are pretty easy to apply incorrectly, so
 The utilization formula \(\rho = \lambda / \mu\) is notable because it shows directly what is intuitively clear: if customers are arriving faster than they can be served, then utilization will be more than 100\%, the queue will grow to infinity, and the system isn't stable.
 
 Another extremely important equation is the relationship between residence time, wait time, and  service time:
-
 \[
  R = W_q + S
 \]
@@ -317,7 +307,6 @@ The usual use for queueing analysis is to answer questions about queue lengths a
 As I showed earlier, both queue lengths and wait times go to infinity as a server gets close to 100\% utilization. But what, exactly, is the shape of that hockey stick curve? How do you calculate it?
 
 Finding exact answers can be tricky, because you have to figure out what kind of system you're dealing with. In the simplest M/M/1 case, your total time checking out is:
-
 \[
   R = \frac{S}{1 - \rho}
 \]
@@ -344,7 +333,6 @@ The simple equation in the previous section is for an M/M/1 queue with a single 
 The Erlang formulas apply to a variety of different kinds of queueing systems. The one I've seen referenced most often is the Erlang C formula, because it applies to M/M/m queues. It uses an {\itshape Erlang} as a dimensionless unit of service demand or load, sometimes called the traffic intensity. An Erlang is another way of expressing average concurrency. For example, as the \href{http://en.wikipedia.org}{Wikipedia page} explains, a single phone circuit can carry 60 minutes of calls in an hour; if a group of circuits receives 100 6-minute calls in an hour, the traffic intensity in that hour will be 600 minutes, or 10 Erlangs. If there are more Erlangs of demand than servers, the queue is unstable.
 
 The Erlang C formula commonly appears in several forms. I will show only one. Given the traffic intensity $A$ in Erlangs, the following is the probability that a customer will find all servers busy and will have to wait in the queue:
-
 \[
 P(W_q > 0) = \cfrac{\cfrac{A^M}{M!}\cfrac{M}{M-A}}{\left( \sum\limits_{i=1}^{M-1} \cfrac{A^i}{i!} \right) + \cfrac{A^M}{M!}\cfrac{M}{M-A}}
 \]	% Create an unnumbered equation
@@ -363,13 +351,11 @@ Before I show you any formulas, let's pause for a moment and think about how a s
 So when there are \( M \) servers that are all equally capable of serving a customer, then it's less likely that all of them are busy at the moment a customer arrives, and wait time in the queue should be shorter. 
 
 Recall the earlier equation for the residence time in an M/M/1 queueing system:
-
 \[
   R = \frac{S}{1 - \rho}
 \]
 
 One way to extend this for multiple-server queues is as follows.
-
 \[
   R \approx \frac{S}{ 1-\rho^M }
 \]
@@ -384,7 +370,6 @@ Neil Gunther explores this in detail in Chapter 2 (specifically, Section 2.7) of
 Although this passes the sniff test, the results are only approximate. (They are exact for 1 and 2 servers.) This equation can underestimate the residence time by up to about 10\% in some cases.
 
 In 1977, Hirotaka Sakasegawa wrote a paper that describes the derivation and behavior of a more accurate approximation\footnote{See \href{https://github.com/VividCortex/approx-queueing-theory}{this GitHub repository} for a table of results and comparisons to Gunther's heuristic formula and the Erlang C formula, as well as the paper in PDF format.} for M/M/m and M/G/m queueing systems. Note that this one is for queue length, not service time.
-
 \[
 L_q \approx \frac{ \rho^{\sqrt{2(M+1)}} }{ 1-\rho} \times \frac {CV_{IAT}^2 + CV_{ST}^2}{2}
 \]
@@ -546,7 +531,8 @@ Perl.
 \item For more on the QED regime and the square-root staffing rule, see
 \href{http://www.columbia.edu/~ww2040/HalfinWW1981.pdf}{Heavy-traffic limits for queues with many exponential servers} by Halfin \& Whitt (1981), or a more recent paper, \href{http://www.columbia.edu/~ww2040/shorter041907.pdf}{What You Should Know About Queueing Models To Set Staffing Requirements in Service Systems}, by Ward Whitt.
 \item For more on approximations to the Erlang formulas, see
-\href{https://github.com/VividCortex/approx-queueing-theory}.
+\href{https://github.com/VividCortex/approx-queueing-theory}{this GitHub
+repository}.
 \end{itemize}
 
 \newpage
