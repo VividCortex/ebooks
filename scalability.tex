@@ -1,0 +1,150 @@
+\documentclass{vivid_layout_pdf}
+
+%% Required to build cover page
+\title{Everything You Need To Know About}{Scalability}
+\date{\today}
+\cover{scalability/cover}
+
+%% Required to build "Meet the Author"
+\author{Baron Schwartz}{img/baron}
+
+%% Required image for "About VividCortex"
+\aboutvc{img/presenter}
+
+%% Required resource info
+\resourceleft%
+	{The Strategic IT Manager's Guide To Building A Scalable DBA Team}
+	{}
+	{img/scalable-dba-team}
+	{https://www.vividcortex.com/resources/building-scalable-dba-team/}
+\resourceright%
+	{Case Study: SendGrid}
+	{VividCortex has been instrumental in finding issues. It's the go-to solution for seeing what's happening in production systems.}
+	{img/sendgrid-thumbnail}
+	{https://www.vividcortex.com/resources/case-studies/sendgrid/}
+
+\begin{document}
+\maketitle		% Build the cover page
+\begin{bio}		% Biographical info for "Meet the Author"
+Baron is a database expert who is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. An engineer by training, Baron has spent his career studying how teams build reliable, high performance systems, and has helped build and optimize database systems for some of the largest Internet properties. Baron has applied his systems thinking skills to both computer systems and teams of people, and has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron was an early employee at Percona, where he managed teams including consulting, support, training, and software engineering. Baron has a degree in Computer Science from the University of Virginia.
+\end{bio}
+\tableofcontents	% Build the table of contents
+
+- Introduction
+- What is Scalability?
+	- wikipedia definition
+   - a function of concurrency or capacity
+	  but see the voltdb thing, you may need to put "shard" on the x-axis
+	  https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/
+	- definitions: conc, util, tput, rtime
+	- Linear Scalability
+	- must go thru origin, straight line
+	- beware of points that look straight, don't show actual numbers
+	- linear with 90% scaling factor
+	- hardware and software scaling
+	- different from eprformance
+- Nonlinear scaling
+  - serialization
+  - crosstalk
+  - common gotcha on benchmarks - nonlinear x-axis
+- The USL
+	- A formal definition
+	- meaning of the coefficients
+	- ahmdahl's law
+	- hidden coeff
+- Fitting the USL to the real world
+	- collecting metrics
+		- tcp data
+		- mysql data
+		- diskstats
+	- cleaing data - removing outliers (faults)
+	- regression
+	- some examples
+- scalability capacity, and performance
+  performance is response time
+  capacity  is max work-getting-done with SLA of good perf (typically as percentile)
+	 by he way this is a problem with benchmarks - they push the system bad perf
+	little's law
+	r-time relationship to usl
+	https://www.desmos.com/calculator/nkoon8fiyp
+	is it valid? is r-time quadratic wrt concurrncy? if so then appd might be OK
+	don't confuse this with r-time and utilization chart; concur -> infinity
+	further reading:
+ * https://groups.google.com/d/topic/guerrilla-capacity-planning/hei8zL2muuE/discussion
+  * http://perfdynamics.blogspot.com/2015/07/hockey-elbow-and-other-response-time.html
+- capacity planning
+      * can we predict a system’s capacity
+		    * queueing theory - hard because of service times
+			     * USL instead
+- Using the USL for capacity planning
+  - forecasting
+  - show one of the datasets with only part of the data, does it predict the
+  rest?
+  - best and worst cases; repairman queueing
+  - where is the lsos off linearity coming from
+  - using it to see approx what % of capacity we're at now
+- the usl in real life
+  - how well does it work
+	The USL is wrong:
+	theoretical physicist, Richard Feynman:
+	“In general we look for a new law by the following process: first we guess it.
+	Don’t laugh -- that’s really true. Then we compute the consequences of the guess
+	to see what, if this law is right, what it would imply. Then we compare those
+	computation results to nature, i.e. experiment and experience. We compare it
+	directly to observation to see if it works.
+	“If it disagrees with experiment, it’s wrong. That simple statement is the key
+	to science. It doesn’t make a difference how beautiful your guess is, it doesn’t
+	make a difference how smart you are, who made the guess or what his name is --
+	if it disagrees with experiment, it’s wrong. That’s all there is to it.”
+	(Cornell lecture, 1964)
+
+  - 
+      * ceilings from hitting something’s max capacity like network tput
+		    * usually queueing causes retrograde to grow even faster than
+			 predicted
+	- note that one could conjecture and analyze other shapes like the USL, e.g.
+	https://www.desmos.com/calculator/r9keaenvcq
+- superlinear scaling
+	- special cases: aggregate capacity not scaling proportionately to load,
+	dataset, etc so each "worker" has some advantage
+	- special case: 1 and 2 nodes
+	- effect of "economies of scale," that is a resource that is more efficient
+	when shared than when used singly
+	- https://queue.acm.org/detail.cfm?id=2789974
+- other PoV on scapability
+	- alternative definitions of scalability - new relic
+	 http://www.xaprb.com/blog/2013/01/07/a-close-look-at-new-relics-scalability-chart/
+
+	, appd, riak
+	- cockcroft headroom plots
+* How to improve scalability
+    * avoid crosstalk
+	     * avoid serialization
+		      * avoid queueing
+* Further reading
+				    * GCaP
+					     * Look at the Percona white paper
+
+
+Example data
+* http://obartunov.livejournal.com/181981.html
+  http://www.postgrespro.ru/blog/pgsql/2015/08/30/p8scaling
+  scaling/scaling-postgrespro.png
+* VoltDB
+* mat keep
+https://blogs.oracle.com/MySQL/entry/comparing_innodb_to_myisam_performance
+https://www.percona.com/blog/2011/01/26/modeling-innodb-scalability-on-multi-core-servers/
+* paypal example
+https://www.vividcortex.com/blog/2013/12/09/analysis-of-paypals-node-vs-java-benchmarks/
+* example of robert haas
+http://rhaas.blogspot.com/2011/09/scalability-in-graphical-form-analyzed.html
+
+
+\newpage
+
+\begin{about}	% Build "About VividCortex"
+VividCortex is a SaaS database performance monitoring. The database is the heart of most applications, but it's also the part that's hardest to scale, manage, and optimize even as it's growing 50\% year over year. VividCortex has developed a suite of unique technologies that significantly eases this pain for the entire IT department. Unlike traditional monitoring, we measure
+and analyze the system's work and resource consumption. This leads directly to better performance for IT as a whole, at reduced cost and effort.
+\end{about}
+\makeresources	% Build "Related Resources"
+\end{document}

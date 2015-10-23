@@ -1,5 +1,4 @@
-queueing-theory.aux
-queueing-theory.log
-queueing-theory.out
-queueing-theory.pdf
-queueing-theory.toc
+*.aux
+*.log
+*.out
+*.toc
