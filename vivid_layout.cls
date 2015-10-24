@@ -1,5 +1,5 @@
 %--------------------------------------
-%% Document class vivid_layout_pdf.cls designed by Nadia Barnard
+%% Document class vivid_layout.cls designed by Nadia Barnard
 %% for Baron Schwartz of VividCortex
 %--------------------------------------
 %% Preliminaries
@@ -8,7 +8,7 @@
 \NeedsTeXFormat{LaTeX2e}
 % Name and label class
 \ProvidesClass{vivid_layout}%
-	[2015/10/23 Custom document layout for VividCortex]
+	[2015/10/24 Custom document layout for VividCortex]
 
 %--------------------------------------
 %% Initial Document Setup
@@ -70,6 +70,8 @@
 	BoldFont = Roboto-Bold,%
 	ItalicFont = Roboto-LightItalic,%
 	BoldItalicFont = Roboto-BoldItalic]
+
+\DeclareMathSizes{12}{14}{8}{14}
 
 % Redefine default text colour as vividgray
 \newcommand{\globalcolor}[1]{%
@@ -193,7 +195,7 @@
 
 % Footnotes
 \newcommand{\fntfootnote}{%
-	\fontsize{10pt}{10pt}%
+	\fontsize{8pt}{8pt}%
 	\selectfont}
 
 % Tables
@@ -248,7 +250,7 @@
 	Copyright \textcopyright\,2015 VividCortex}%
 }
 \rfoot{%
-	\vmiddle{\includegraphics[height=0.15in]{copyright}}%
+	\vmiddle{\includegraphics[height=0.15in]{img/by-nc-nd}}%
 }
 \renewcommand{\headrulewidth}{0pt}
 \let\oldfoot\footrule
@@ -347,6 +349,7 @@
 		\hspace{0.15in}%
 		\fnttoc%
 		\hrulefill%
+		\hspace{0.15in}%
 		\contentspage%
 	}[\vspace{-10pt}]
 
@@ -410,14 +413,17 @@
 %% Redefine \footnote
 
 \renewcommand{\footnoterule}{%
+	\kern -3pt
 	\begin{tikzpicture}
 		\draw[%
 			vividlight,%
 			dotted,%
-			line width=2pt%
+			line width=1pt,%
+			inner sep=0pt,%
 		] (0,0) -- (\textwidth,0);
 	\end{tikzpicture}
 	\vspace*{-10pt}
+	\kern 2pt
 }
 
 \renewcommand{\footnotesize}{\fntfootnote}

@@ -8,7 +8,7 @@
 \NeedsTeXFormat{LaTeX2e}
 % Name and label class
 \ProvidesClass{vivid_layout_pdf}%
-	[2015/10/23 Custom document layout for VividCortex]
+	[2015/10/24 Custom document layout for VividCortex]
 
 %--------------------------------------
 %% Initial Document Setup
@@ -16,7 +16,7 @@
 % Load article class as basis
 \LoadClass[letterpaper, 12pt]{article}
 % Customise footnotes (must be before fancyhdr)
-\RequirePackage[perpage,bottom,hang]{footmisc}
+\RequirePackage[perpage,hang,bottom]{footmisc}
 % Set margins
 \RequirePackage{fancyhdr}
 \pagestyle{fancy}
@@ -66,6 +66,8 @@
 	BoldFont = Roboto-Bold,%
 	ItalicFont = Roboto-LightItalic,%
 	BoldItalicFont = Roboto-BoldItalic]
+
+\DeclareMathSizes{12}{14}{8}{14}
 
 % Redefine default text colour as vividgray
 \newcommand{\globalcolor}[1]{%
@@ -189,7 +191,7 @@
 
 % Footnotes
 \newcommand{\fntfootnote}{%
-	\fontsize{10pt}{10pt}%
+	\fontsize{8pt}{8pt}%
 	\selectfont}
 
 % Tables
@@ -343,6 +345,7 @@
 		\hspace{0.15in}%
 		\fnttoc%
 		\hrulefill%
+		\hspace{0.15in}%
 		\contentspage%
 	}[\vspace{-10pt}]
 
@@ -406,14 +409,17 @@
 %% Redefine \footnote
 
 \renewcommand{\footnoterule}{%
+	\kern -3pt
 	\begin{tikzpicture}
 		\draw[%
 			vividlight,%
 			dotted,%
-			line width=2pt%
+			line width=1pt,%
+			inner sep=0pt,%
 		] (0,0) -- (\textwidth,0);
 	\end{tikzpicture}
 	\vspace*{-10pt}
+	\kern 2pt
 }
 
 \renewcommand{\footnotesize}{\fntfootnote}

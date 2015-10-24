@@ -66,7 +66,8 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 	 by he way this is a problem with benchmarks - they push the system bad perf
 	little's law
 	r-time relationship to usl
-	https://www.desmos.com/calculator/nkoon8fiyp
+	https://www.desmos.com/calculator/vjlnruxxdi
+	y=\frac{1+s(x-1)+kx(x-1)}{c}
 	is it valid? is r-time quadratic wrt concurrncy? if so then appd might be OK
 	don't confuse this with r-time and utilization chart; concur -> infinity
 	further reading:
@@ -103,7 +104,11 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 		    * usually queueing causes retrograde to grow even faster than
 			 predicted
 	- note that one could conjecture and analyze other shapes like the USL, e.g.
-	https://www.desmos.com/calculator/r9keaenvcq
+	https://www.desmos.com/calculator/nl53iwbngn
+	u\left(x\right)=\frac{bx}{1+s\left(x-1\right)+kx\left(x-1\right)}\left\{x>0\right\}
+	l\left(x\right)=\frac{bx}{1+s\left(x-1\right)+k\ln\left(x\right)\left(x-1\right)}\left\{x>0\right\}
+	r\left(x\right)=\frac{bx}{1+s\left(x-1\right)+k\sqrt{x}\left(x-1\right)}\left\{x>0\right\}
+	- Jayanta Choudhury has suggested changes to fit better.
 - superlinear scaling
 	- special cases: aggregate capacity not scaling proportionately to load,
 	dataset, etc so each "worker" has some advantage

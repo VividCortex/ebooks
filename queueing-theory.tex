@@ -152,7 +152,7 @@ queueing and waiting.
 Some of them will take much longer. And when this happens, there's
 overlap again because new shoppers will arrive and be ready to
 check out while the existing ones are still in progress.
-\item {\bfseries Waste.} Lost time can never be regained. Shoppers who arrive at the line just after someone else overlap because the first shopper didn't have time to finish. But if you look at it another way, perhaps it's not the second shopper's fault. Perhaps the first shopper should have arrived earlier, but wasted time doing something else while the cashier was idle! They missed their chance and made the second shopper have to wait. When the cashier is idle, time is wasting, and can never be gotten back because the cashier can't be more than 100\% utilized. Everything gets delayed permanently, and that shows up as queueing for later arrivals.
+\item {\bfseries Waste.} Lost time can never be regained. Shoppers overlap because earlier shoppers didn't have time to finish. But if you look at it another way, perhaps it's not the second shopper's fault. Perhaps the first shopper should have arrived earlier, but wasted time doing something else while the cashier was idle! They missed their chance and made the second shopper have to wait. When the cashier is idle, time is wasting, and can never be gotten back because the cashier can't be more than 100\% utilized. Everything gets delayed permanently, and that shows up as queueing for later arrivals.
 \end{enumerate}
 In general, irregular arrival times and irregular job sizes are guaranteed to cause queueing.  The only time there's no queueing is when the job sizes are uniform, the arrivals are timed evenly, and there's not too much work for the cashier to keep up. Even when the cashier is not busy at all, irregular or bursty arrivals will cause some queueing.
 
@@ -313,13 +313,12 @@ Finding exact answers can be tricky, because you have to figure out what kind of
 
 Therefore, your residence time is proportional to \( 1/(1-\rho) \), which is known as the {\itshape stretch factor}, a normalized measure of how ``stretched'' your residence time is relative to your service time. It is easy to see that this is an exponential curve; in fact it's the hockey stick curve. You can experiment interactively with it on \href{https://www.desmos.com/calculator/vhvwh6vjo7}{Desmos}.
 
-Notice that the residence time doubles with every halving of \( 1-\rho \). If \( S = 0.25 \), for example, then
+Notice that the residence time doubles with every halving of \( 1-\rho \). If $S$ is 0.25, for example, then
 
 \begin{itemize}
 \item At 50\% utilization, \( R \) is 0.5
 \item At 75\% it is 1.0
-\item At 87.5\% it is 2.0
-\item And so on.
+\item At 87.5\% it is 2.0, and so on.
 \end{itemize}
 
 This leads to a useful rule of thumb to remember for a single-server queueing system: {\itshape residence time is inversely proportional to the server's idle capacity}. Halve the idle capacity, double the response time.
@@ -448,7 +447,9 @@ and efficiency, you aim for this, often abbreviated the QED regime.
 \end{enumerate}
 
 It's not difficult to figure out how many servers you need for the quality or
-efficiency goals. The QED regime is a bit trickier, though.
+efficiency goals. You can do this by solving for a desired utilization or by
+just holding constant the "padding" of spare capacity above the offered load,
+respectively. The QED regime is a bit trickier, though.
 
 It turns out that there's a really neat approximate solution that works very
 well in the real world and is useful to help develop your intuition further.
@@ -463,9 +464,9 @@ for the holiday season. How many servers do you need?
 
 To solve this problem, note that you effectively have 8 servers fully utilized
 and 2 servers of spare capacity. Your 8 servers need to triple, and your spare
-capacity needs to grow by a factor of \( \sqrt{3} \). So the answer is \( 24 +
-2*\sqrt{3} \), or 27.46. You should round this up to the nearest whole server,
-or 28 servers.
+capacity needs to grow by a factor of \( \sqrt{3} \). So the answer is \(
+3\cdot8 + 2\sqrt{3} \), or 27.46. You should round this up to the nearest whole
+server, or 28 servers.
 
 This rule of thumb is great for developing intuition about how capacity,
 utilization, and quality of service grow with traffic. It gets more accurate as
@@ -528,6 +529,8 @@ material I've found.
 \item {\itshape Analyzing Computer System Performance With Perl::PDQ} by Neil
 Gunther, which despite its name is much more about queueing theory than about
 Perl.
+\item {\itshape Probability, Statistics, and Queueing Theory} by Allen.
+\item {\itshape Capacity Planning for Web Performance} by Menasce and Almeida.
 \item For more on the QED regime and the square-root staffing rule, see
 \href{http://www.columbia.edu/~ww2040/HalfinWW1981.pdf}{Heavy-traffic limits for queues with many exponential servers} by Halfin \& Whitt (1981), or a more recent paper, \href{http://www.columbia.edu/~ww2040/shorter041907.pdf}{What You Should Know About Queueing Models To Set Staffing Requirements in Service Systems}, by Ward Whitt.
 \item For more on approximations to the Erlang formulas, see
@@ -538,7 +541,7 @@ repository}.
 \newpage
 
 \begin{about}	% Build "About VividCortex"
-VividCortex is a SaaS database performance monitoring. The database is the heart of most applications, but it's also the part that's hardest to scale, manage, and optimize even as it's growing 50\% year over year. VividCortex has developed a suite of unique technologies that significantly eases this pain for the entire IT department. Unlike traditional monitoring, we measure
+VividCortex is a SaaS database performance monitoring product. The database is the heart of most applications, but it's also the part that's hardest to scale, manage, and optimize even as it's growing 50\% year over year. VividCortex has developed a suite of unique technologies that significantly eases this pain for the entire IT department. Unlike traditional monitoring, we measure
 and analyze the system's work and resource consumption. This leads directly to better performance for IT as a whole, at reduced cost and effort.
 \end{about}
 \makeresources	% Build "Related Resources"
