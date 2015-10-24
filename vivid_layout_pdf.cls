@@ -491,7 +491,7 @@
 	\begin{mdframed}[style=mdfabout]{%
 		\centering%
 		\fntabouthead%
-		About \vmiddle{\includegraphics[height=30pt]{vividcortex_logo_V}} VividCortex\par}%
+		About \vmiddle{\includegraphics[height=30pt]{img/vividcortex-v}} VividCortex\par}%
 		\fntaboutbody%
 	}{%
 	\end{mdframed}%
