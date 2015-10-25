@@ -1,0 +1,51 @@
+options(scipen=5)
+# export 8.5x5 inches
+
+plot(voltdb$nodes, voltdb$tput, type="b", xlim=c(1.45,13),ylim=c(100000,500000),xlab="nodes", ylab="throughput")
+
+# linear1.pdf
+linear <- read.csv("~/repos/ebooks/scalability/linear.txt", sep="")
+plot(linear$nodes, linear$tput, type="b",xlab="nodes", ylab="throughput", xlim=c(0,10), ylim=c(0,20000))
+
+# linear2.pdf
+> plot(linear$nodes, linear$tput, type="b",xlab="nodes", ylab="throughput", xlim=c(0,10), ylim=c(0,20000))
+> par(new=T)
+> plot(linear2$nodes[0:4], linear2$tput[0:4], type="b",xlab="nodes", ylab="throughput", xlim=c(0,10), ylim=c(0,20000))
+
+# linear3.pdf
+> plot(linear$nodes, linear$tput, type="b",xlab="nodes", ylab="throughput", xlim=c(0,10), ylim=c(0,20000))
+> par(new=T)
+> plot(linear2$nodes, linear2$tput, type="b",xlab="nodes", ylab="throughput", xlim=c(0,10), ylim=c(0,20000))
+
+# ideal-linear.pdf
+> eq=function(x){y=1800*x}
+> eq2=function(x){y=800*x}
+> plot(eq,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800))
+> par(new=TRUE)
+> plot(eq2,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800))
+
+# amdahl.pdf
+> eq=function(x){y=1800*x}
+> am=function(x){y=1800*x/(1+.05*(x-1))}
+> plot(eq,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800),lty="dashed")
+> par(new=TRUE)
+> plot(am,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800))
+
+# usl.pdf
+> usl=function(x){y=1800*x/(1+.05*(x-1)+.02*x*(x-1))}
+> plot(eq,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800),lty="dashed")
+> par(new=TRUE)
+> plot(am,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800),lty="dashed")
+> par(new=TRUE)
+> plot(usl,1, 20, xlab="N", ylab="X",ylim=c(0,20*1800))
+
+# cisco.pdf
+> benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+> usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1) + kappa * size * (size-1)), benchmark, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+> summary(usl)
+> sigma <- coef(usl)['sigma']
+> kappa <- coeff(usl)['kappa']
+> lambda <- coef(usl)['lambda']
+> usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
+> plot(usl, 0, max(benchmark$size)*2, xlab="Size", ylab="Throughput", lty="dashed")
+> points(benchmark$size, benchmark$tput)

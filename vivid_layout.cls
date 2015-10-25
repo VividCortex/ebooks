@@ -31,8 +31,16 @@
 	\footskip=0.8in
 	\paperwidth=8.5in
 	\paperheight=11in
-	% Set size of print paper, show crop marks
-\RequirePackage[noinfo,cam,center,width=9truein,height=11.5truein]{crop}
+
+% Set size of print paper, show crop marks
+\newcommand{\makeprint}{%
+	\RequirePackage[%
+	noinfo,%
+	cam,%
+	center,%
+	width=9truein,%
+	height=11.5truein%
+	]{crop}}
 
 %---------------------------------------
 %% Load Required Packages
@@ -243,7 +251,7 @@
 	Page \thepage%
 }
 \lfoot{%
-	\vmiddle{\includegraphics[height=0.35in]{vividcortex_logo}}%
+	\vmiddle{\includegraphics[height=0.35in]{img/vividcortex_logo}}%
 }
 \cfoot{%
 	\vmiddle{\fntheadfoot%
@@ -288,7 +296,7 @@
 	{\fntdate%
 		\@date%
 		\par}
-	\includegraphics[width=2.5in]{vividcortex_logo_white}
+	\includegraphics[width=2.5in]{img/vividcortex-horizontal-white-rgb}
 	\vspace*{-0.5in}
 
 \clearpage
