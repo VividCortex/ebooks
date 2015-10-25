@@ -1,5 +1,9 @@
 \documentclass{vivid_layout_pdf}
 
+%\usepackage{tikz}
+%\usetikzlibrary{datavisualization}
+%\usetikzlibrary{datavisualization.formats.functions}
+
 %% Required to build cover page
 \title{Everything You Need To Know About}{Scalability}
 \date{\today}
@@ -30,29 +34,93 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 \end{bio}
 \tableofcontents	% Build the table of contents
 
-- Introduction
-- What is Scalability?
-	- wikipedia definition
-   - a function of concurrency or capacity
-	  but see the voltdb thing, you may need to put "shard" on the x-axis
-	  https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/
-	- definitions: conc, util, tput, rtime
+\section{Introduction}
+
+\section{What is Scalability?}
+
+Scalability is ambiguous for many people---a vague term often tossed about in
+conference presentations, for example. Wikipedia's definition, borrowed from
+a 2000 paper by Andr\'e B. Bondi,
+is ``Scalability is the capability of a system, network, or process to handle a
+growing amount of work, or its potential to be enlarged in order to accommodate
+that growth.'' Although this isn't incorrect, it's still a bit informal, and
+this ebook needs a more formal definition.
+
+Neil J. Gunther provides one such definition: scalability is a {\itshape
+function}. I read Dr. Gunther's books and heard him speak for quite a while
+before that sunk in for me. Scalability can be defined as a mathematical
+function, the relationship between an input (independent variable) and output
+(dependent variable).
+
+What, exactly, that function {\itshape is} is a subject you can explore as
+deeply as you want. As you'll see later, I'll delve into it a little bit.
+
+The important thing, though, is the correct understanding of the dependent and
+independent variables in the function. There are a few different ways to
+consider this. If you choose the variables incorrectly, you'll end up trying to
+analyze nonsense.
+
+Bondi's definition provides a good clue: {\itshape work} is the driving factor
+of scalability. Useful ways to think about work include, to mention a few,
+
+\begin{itemize}
+\item units of work (requests)
+\item the rate of requests over time (arrival rate)
+\item the number of units of work in progress at a time (concurrency)
+\item the number of customers or users sending requests
+\end{itemize}
+
+Each of these can be sensible independent variables for the scalability function
+in different circumstances. For example, in benchmarks it's quite common to
+configure the number of threads the benchmark uses to send requests to a
+database. The benchmark usually sends requests as fast as possible, assuming
+zero think time, so the arrival rate is related to, but not strictly controlled
+by, the benchmark configuration (since it is determined by how quickly the database finishes each request).
+
+One might say that load or concurrency is the input to the benchmark's
+scalability function, and the completion rate is the output.
+
+In another scenario, you might vary the number of CPUs for the system under test
+(SUT) while holding constant the load per CPU, or if it's a clustered database,
+vary the cluster size and hold constant the load per node. In this case, the
+independent variable is the system resources.
+
+In most cases I've analyzed, either concurrency or resources are usually
+sensible independent variables for a scalability function.\footnote{I have seen
+other scenarios, such as
+\href{https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/}{scaling by number of shards}, but we don't need to dig into that in this book.} So for
+the purposes of this book, we'll consider scalability to be {\itshape a function
+of concurrency or capacity}. The dependent variable is usually the rate at which
+the system can process work, or {\itshape throughput}.
+
+For those who are like me and need extra
+emphasis, I'll repeat that this is a mathematical function, with concurrency or
+capacity on the $X$ axis, and throughput on the $Y$ axis.
+
+Now we have a sensible context in which to discuss the Holy Grail of
+Scalability: {\itshape linear scalability}. After all, linear means there's a
+linear relationship between the variables, which means there's a straight line
+when you plot them. If you hear people talk about linear scalability, which they
+often do in marketechture sorts of contexts, and it's not clear what the axes
+represent, you know there's a vague or poorly understood definition of
+scalability at play.
+
 	- Linear Scalability
 	- must go thru origin, straight line
 	- beware of points that look straight, don't show actual numbers
-	- linear with 90% scaling factor
+	- linear with 90\% scaling factor
 	- hardware and software scaling
 	- different from eprformance
-- Nonlinear scaling
+\section{Nonlinear scaling}
   - serialization
   - crosstalk
   - common gotcha on benchmarks - nonlinear x-axis
-- The USL
+\section{The USL}
 	- A formal definition
 	- meaning of the coefficients
 	- ahmdahl's law
 	- hidden coeff
-- Fitting the USL to the real world
+\section{Fitting the USL to the real world}
 	- collecting metrics
 		- tcp data
 		- mysql data
@@ -60,31 +128,33 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 	- cleaing data - removing outliers (faults)
 	- regression
 	- some examples
-- scalability capacity, and performance
+\section{scalability capacity, and performance}
   performance is response time
   capacity  is max work-getting-done with SLA of good perf (typically as percentile)
 	 by he way this is a problem with benchmarks - they push the system bad perf
 	little's law
 	r-time relationship to usl
 	https://www.desmos.com/calculator/vjlnruxxdi
+	\[
 	y=\frac{1+s(x-1)+kx(x-1)}{c}
+	\]
 	is it valid? is r-time quadratic wrt concurrncy? if so then appd might be OK
 	don't confuse this with r-time and utilization chart; concur -> infinity
 	further reading:
  * https://groups.google.com/d/topic/guerrilla-capacity-planning/hei8zL2muuE/discussion
   * http://perfdynamics.blogspot.com/2015/07/hockey-elbow-and-other-response-time.html
-- capacity planning
+\section{capacity planning}
       * can we predict a system’s capacity
 		    * queueing theory - hard because of service times
 			     * USL instead
-- Using the USL for capacity planning
+\section{Using the USL for capacity planning}
   - forecasting
   - show one of the datasets with only part of the data, does it predict the
   rest?
   - best and worst cases; repairman queueing
   - where is the lsos off linearity coming from
-  - using it to see approx what % of capacity we're at now
-- the usl in real life
+  - using it to see approx what \% of capacity we're at now
+\section{the usl in real life}
   - how well does it work
 	The USL is wrong:
 	theoretical physicist, Richard Feynman:
@@ -105,18 +175,24 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 			 predicted
 	- note that one could conjecture and analyze other shapes like the USL, e.g.
 	https://www.desmos.com/calculator/nl53iwbngn
+	\[
 	u\left(x\right)=\frac{bx}{1+s\left(x-1\right)+kx\left(x-1\right)}\left\{x>0\right\}
+	\]
+	\[
 	l\left(x\right)=\frac{bx}{1+s\left(x-1\right)+k\ln\left(x\right)\left(x-1\right)}\left\{x>0\right\}
+	\]
+	\[
 	r\left(x\right)=\frac{bx}{1+s\left(x-1\right)+k\sqrt{x}\left(x-1\right)}\left\{x>0\right\}
+	\]
 	- Jayanta Choudhury has suggested changes to fit better.
-- superlinear scaling
+\section{superlinear scaling}
 	- special cases: aggregate capacity not scaling proportionately to load,
 	dataset, etc so each "worker" has some advantage
 	- special case: 1 and 2 nodes
 	- effect of "economies of scale," that is a resource that is more efficient
 	when shared than when used singly
 	- https://queue.acm.org/detail.cfm?id=2789974
-- other PoV on scapability
+\section{other PoV on scapability}
 	- alternative definitions of scalability - new relic
 	 http://www.xaprb.com/blog/2013/01/07/a-close-look-at-new-relics-scalability-chart/
 
@@ -137,7 +213,7 @@ Example data
   scaling/scaling-postgrespro.png
 * VoltDB
 * mat keep
-https://blogs.oracle.com/MySQL/entry/comparing_innodb_to_myisam_performance
+https://blogs.oracle.com/MySQL/entry/comparing\_innodb\_to\_myisam\_performance
 https://www.percona.com/blog/2011/01/26/modeling-innodb-scalability-on-multi-core-servers/
 * paypal example
 https://www.vividcortex.com/blog/2013/12/09/analysis-of-paypals-node-vs-java-benchmarks/
