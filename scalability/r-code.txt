@@ -49,3 +49,107 @@ plot(linear$nodes, linear$tput, type="b",xlab="nodes", ylab="throughput", xlim=c
 > usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
 > plot(usl, 0, max(benchmark$size)*2, xlab="Size", ylab="Throughput", lty="dashed")
 > points(benchmark$size, benchmark$tput)
+
+# cisco-tput.pdf
+> u=function(x){(1+sigma*(x-1)+kappa*x*(x-1))/lambda}
+> plot(u,0,max(benchmark$size)*2,xlab="Size", ylab="Response Time", lty="dashed")
+> points(benchmark$size, benchmark$size/benchmark$tput)
+
+# paypal.pdf
+
+nodejs <- read.csv("~/repos/ebooks/scalability/nodejs.txt", sep="")
+usl.node <- nls(node ~ lambda*conc/(1 + sigma * (conc-1) + kappa * conc * (conc-1)), nodejs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+node.sigma = coef(usl.node)['sigma']
+node.kappa = coef(usl.node)['kappa']
+node.lambda = coef(usl.node)['lambda']
+usl.java <- nls(java ~ lambda*conc/(1 + sigma * (conc-1) + kappa * conc * (conc-1)), nodejs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+java.sigma = coef(usl.java)['sigma']
+java.kappa = coef(usl.java)['kappa']
+java.lambda = coef(usl.java)['lambda']
+
+# override...
+java.sigma = .000011
+java.lambda = 1.8
+
+node.usl=function(x){node.lambda*x/(1+node.sigma*(x-1)+node.kappa*x*(x-1))}
+java.usl=function(x){java.lambda*x/(1+java.sigma*(x-1)+java.kappa*x*(x-1))}
+plot(node.usl,0,35,xlab="Users", ylab="Throughput", ylim=c(0,35))
+par(new=TRUE)
+plot(java.usl,0,35,xlab="Users", ylab="Throughput", lty="dashed",ylim=c(0,35))
+points(nodejs$conc, nodejs$node)
+points(nodejs$conc, nodejs$java)
+
+# webapp.pdf
+webapp <- read.csv("~/repos/ebooks/scalability/webapp.csv", sep="")
+usl.model <- nls(tput ~ lambda*conc/(1 + sigma * (conc-1) + kappa * conc * (conc-1)), webapp, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+node.sigma = coef(usl.node)['sigma']
+node.kappa = coef(usl.node)['kappa']
+node.lambda = coef(usl.node)['lambda']
+usl.java <- nls(java ~ lambda*conc/(1 + sigma * (conc-1) + kappa * conc * (conc-1)), nodejs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+java.sigma = coef(usl.java)['sigma']
+java.kappa = coef(usl.java)['kappa']
+java.lambda = coef(usl.java)['lambda']
+
+# logscale.pdf
+> usl=function(x){y=5*x/(1+.2*(x-1)+.2*x*(x-1))}
+> lsl=function(x){y=5*x/(1+.2*(x-1)+.2*log(x)*(x-1))}
+> plot(usl,0,20,xlab="N",ylab="X(N)",ylim=c(0,10))
+> par(new=TRUE)
+> plot(lsl,0,20,xlab="N",ylab="X(N)",ylim=c(0,10),lty="dashed")
+
+# handlersocket.pdf
+options(scipen=5)
+hs <- read.csv("~/repos/ebooks/scalability/handlersocket.txt", sep="")
+usl.model <- nls(tput ~ lambda*conc/(1 + sigma * (conc-1) + kappa * conc * (conc-1)), hs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+sigma <- coef(usl.model)['sigma']
+kappa <- coef(usl.model)['kappa']
+lambda <- coef(usl.model)['lambda']
+usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
+plot(usl, 0, max(hs$conc)*2, xlab="Connections", ylab="Throughput", lty="dashed")
+points(hs$conc, hs$tput)
+
+# logscale-2.pdf
+> usl.model <- nls(tput ~ lambda*conc/(1 + sigma * (conc-1) + kappa * log(conc) * (conc-1)), hs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+> sigma <- coef(usl.model)['sigma']
+> kappa <- coef(usl.model)['kappa']
+> lambda <- coef(usl.model)['lambda']
+> usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*log(x)*(x-1))}
+> plot(usl, 0, max(hs$conc)*2, xlab="Connections", ylab="Throughput", lty="dashed")
+> points(hs$conc, hs$tput)
+
+# aissl.pdf
+usl.model <- nls(tput ~ lambda*conc/(1 + sigma * (conc-1) + kappa * sqrt(conc) * (conc-1)), hs, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+sigma <- coef(usl.model)['sigma']
+kappa <- coef(usl.model)['kappa']
+lambda <- coef(usl.model)['lambda']
+usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*sqrt(x)*(x-1))}
+plot(usl, 0, max(hs$conc)*2, xlab="Connections", ylab="Throughput", lty="dashed", ylim=c(0,120000))
+points(hs$conc, hs$tput)
+par(new=TRUE)
+sigma=-0.0154290
+kappa=0.0234922
+lambda=9921.9533628
+usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*log(x)*(x-1))}
+plot(usl, 0, max(hs$conc)*2, xlab="", ylab="", ylim=c(0,120000))
+
+# superlinear.pdf
+> usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
+> lambda=1.4
+> kappa=0.08
+> sigma=-.4
+> plot(usl, 0,15,xlab="Size", ylab="Throughput", ylim=c(0,10))
+> l=function(x){y=lambda*x}
+> plot(usl, 0,15,xlab="Size", ylab="Throughput", ylim=c(0,10))
+> par(new=TRUE)
+> plot(l,0,15,ylab="", xlab="", ylim=c(0,10),lty="dashed")
+
+# quadratic.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+> usl <- nls(tput ~ a+b*(size-c)*(size-c), benchmark, start=c(a=12000,b=-.05,c=25))
+> a=coef(usl)['a']
+> b=coef(usl)['b']
+> c=coef(usl)['c']
+> fun=function(x){a+b*(x-c)^2}
+> plot(fun, 0,70, xlab="Threads", ylab="Throughput", ylim=c(-500,15000))
+> points(benchmark$size, benchmark$tput)
+> abline(1,0)
