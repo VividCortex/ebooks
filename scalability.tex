@@ -39,6 +39,10 @@ Baron is a database expert who is well-known for his contributions to the MySQL,
 
 \section{Introduction}
 
+XXXX
+
+XXX: TODO trim down my biography
+
 \section{What is Scalability?}
 
 Scalability is ambiguous for many people---a vague term often tossed about in
@@ -47,27 +51,28 @@ similar to performance, efficiency, capacity, availability, and many other terms
 related to making things big and fast.
 
 Wikipedia's definition of scalability, borrowed from a 2000 paper by Andr\'e B.
-Bondi, is ``Scalability is the capability of a system, network, or process to
+Bondi, is ``the capability of a system, network, or process to
 handle a growing amount of work, or its potential to be enlarged in order to
 accommodate that growth.'' This isn't wrong, but it's still a bit informal, and
 this ebook needs a more formal definition.
 
 Dr. Neil J. Gunther provides one such definition: scalability is a {\itshape
-function}. I read Dr. Gunther's books and heard him speak for quite a while
-before that sunk in for me. Scalability can be defined as a mathematical
-function, the relationship between independent and dependent variables (input
-and output).
+function}. I read Neil Gunther's books and heard him speak for quite a while
+before that sunk in for me. {\itshape Scalability can be defined as a
+mathematical function}, a relationship between independent and dependent
+variables (input and output).
 
-- Most important is getting the x-variable right
-
-Bondi's definition provides a good clue: {\itshape work} is the driving factor
-of scalability. Useful ways to think about work include, to mention a few,
+The most important part of understanding such a scalability model is choosing
+the right independent variable in order to analyze the way systems really
+operate.  Bondi's definition provides a good clue: {\itshape work} is the
+driving factor of scalability. Useful ways to think about work include, to
+mention a few,
 
 \begin{itemize}
-\item units of work (requests)
-\item the rate of requests over time (arrival rate)
-\item the number of units of work in progress at a time (concurrency)
-\item the number of customers or users sending requests
+\item Units of work (requests).
+\item The rate of requests over time (arrival rate).
+\item The number of units of work in progress at a time (concurrency).
+\item The number of customers or users sending requests.
 \end{itemize}
 
 Each of these can be sensible independent variables for the scalability function
@@ -86,15 +91,14 @@ vary the cluster size and hold constant the load per node. In this case, the
 independent variable is the system resources.
 
 In most cases I've analyzed, either concurrency or resources are usually
-sensible independent variables for a scalability function.\footnote{I have seen
-other scenarios, such as
-\href{https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/}{scaling
-by number of shards}, but we don't need to dig into that in this book.} So for
+sensible independent variables for a scalability function. So for
 the purposes of this book, we'll consider scalability to be {\itshape a function
 of concurrency or capacity}. The dependent variable is usually the rate at which
 the system can process work, or {\itshape throughput}.
 
 XXX chart with axes
+
+XXX the preceding few para are pretty confusing
 
 For those who are like me and need extra emphasis, I'll repeat that this is a
 mathematical function, with concurrency or capacity on the $X$ axis, and
@@ -103,10 +107,11 @@ throughput on the $Y$ axis.
 \section{Linear Scalability: The Holy Grail}
 
 In my experience, never was a marketechture slide deck created that mentions
-scalability without also including the word "linear." But like many other things
+scalability without also including the word ``linear.'' But like many other things
 in scalability, that word is {\itshape horribly} abused.
-
-XXX PRINCESS BRIDE MEME
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/inigo}
+\end{center}
 
 Hand-waving claims of linear scaling usually coincide with vague definitions
 of scalability, and people who know a lot about scalability rarely say the word
@@ -133,10 +138,10 @@ This may seem like a pointless rant, but it's actually important if you want to
 be able to design and improve highly scalable systems.
 
 Spotting bogus linearity claims is fun. Here are some ways
-to make systems appear linear:
+marketing departments make systems appear linear:
 
 \begin{itemize}
-\item Show graphs without numbers, so you can't do the math.
+\item Show graphs without numbers, so readers can't do the math.
 \item Show graphs with nonlinear axes.
 \item Begin the axes, especially the $Y$ axis, at a nonzero value.
 \end{itemize}
@@ -203,7 +208,7 @@ common to see people getting better performance out of 4-core servers than
 Why does this happen? Why don't systems scale linearly, and why do they
 sometimes show retrograde scalability?
 
-According to Dr. Gunther, there are two reasons: {\bfseries serialization} and
+According to Neil Gunther, there are two reasons: {\bfseries serialization} and
 {\bfseries crosstalk}. Serialization degrades scalability because parts of the
 work can't be parallelized, so speedup is limited. Crosstalk introduces a
 fast-growing coherency delay as workers (threads, CPUs, etc) block on shared
@@ -212,10 +217,10 @@ next section.
 
 \section{The Universal Scalability Law}
 
-Dr. Neil J. Gunther's Universal Scalability Law (USL) provides a formal
-definition of scalability,\footnote{Gunther originally called the USL
-``superserial,'' and you may encounter this terminology, especially in older
-books and papers.} and a conceptual framework for understanding,
+Neil Gunther's Universal Scalability Law (USL) provides a formal definition of
+scalability,\footnote{Neil Gunther originally called a slightly different form
+of the USL ``superserial,'' and you may encounter this terminology, especially
+in older books and papers.} and a conceptual framework for understanding,
 evaluating, comparing, and improving scalability. It does this by quantifying
 the effects of linear speedup, serialization delay, and coherency delay due to
 crosstalk.
@@ -259,19 +264,21 @@ the speedup approaches 20.
 \includegraphics[width=.85\linewidth]{scalability/amdahl}
 \end{center}
 
+Remember the system I mentioned earlier, which a salesperson claimed to have
+97\% scalability with each additional node? That's 3\% loss of scalability per
+node, so this system will never be able to achieve a speedup factor of more than
+33, no matter how many nodes are added to it.
+
 The last bit is the crosstalk penalty, also called the consistency or coherency
 penalty.\footnote{I call it crosstalk because in my opinion it's the best
 description of the pairwise communication that must occur to make distributed
-data or other shared resources consistent or coherent.} Crosstalk potentially
-happens between each pair of workers in the system (threads, CPUs, servers,
-etc). We represent the amount of crosstalk with another parameter, $\kappa$.
-
-You probably remember that the number of edges in a fully connected graph is
-$n(n-1)$, which is $\mathcal{O}(n^2)$.\footnote{If you're
-not familiar with it,
+data or other shared resources consistent or coherent.} You probably remember
+that the number of edges in a fully connected graph is $n(n-1)$, which is
+$\mathcal{O}(n^2)$.\footnote{If you're not familiar with it,
 \href{https://www.vividcortex.com/blog/2013/10/23/big-o-notation-made-simple/}{this
-blog post introduces Big-O notation}.} The $\kappa$ coefficient quantifies the
-crosstalk in the denominator:
+blog post introduces Big-O notation}.} Crosstalk potentially happens between
+each pair of workers in the system (threads, CPUs, servers, etc). We represent
+the amount of crosstalk with another parameter, $\kappa$:
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \kappa N(N-1)}
 \]
@@ -509,15 +516,16 @@ predict response time.
 \includegraphics[width=.85\linewidth]{scalability/cisco-tput}
 \end{center}
 
-Be careful not to confuse this chart with another famous "hockey stick" chart,
+Be careful not to confuse this chart with another famous ``hockey stick'' chart,
 that of response time versus utilization, which is familiar from queueing
 theory:
 \begin{center}
 \includegraphics[width=.85\linewidth]{queueing-theory/hockey-stick-1}
 \end{center}
 
-The difference is that utilization ranges only from 0 to 1, whereas concurrency
-has no fixed upper limit.
+The difference is that one chart uses utilization as the independent variable,
+which ranges only from 0 to 1, whereas the other uses concurrency, which has no
+fixed upper limit.
 
 The inverted USL predicts mean response time. If you wanted to, you could
 use queueing theory to assess this in a more nuanced way, such as the
@@ -537,13 +545,13 @@ planning. The practical purpose is usually something like the following:
 \end{itemize}
 
 Capacity planning is often a difficult problem because it's hard to tell what a
-system's capacity really is. The USL can be helpful in understanding this, to a
+system's true capacity is. The USL can be helpful in understanding this, to a
 point.
 
 There are conventional ways to determine system capacity, but they're often
 difficult, expensive, and don't give results you can really believe in. For
 example, you can set up load tests, but it takes a lot of work and time, and the
-results are really suspect because the workload is always artificial in some
+results are suspect because the workload is always artificial in some
 way.
 
 You can also run benchmarks, but most benchmarks are pretty useless for
@@ -702,7 +710,8 @@ put it onto a pedestal and worship it.
 I'd also like to note that one could quite easily conjecture and analyze other
 USL-like models. For example, given that many computer algorithms can be shown
 by analysis to be $\mathcal{O}(n\log{}n)$ instead of $\mathcal{O}(n^2)$, perhaps
-the quadratic $\kappa$ term could be replaced by a logarithmic term, like so?
+we could assume that the quadratic $\kappa$ term doesn't really behave like its
+worst-case, and the term could be replaced by a logarithmic term, like so?
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \kappa \log(N)(N-1)}
 \]
@@ -750,11 +759,11 @@ them to operate in the system.
 
 \section{Superlinear Scaling}
 
-I've spent some time talking about the possible causes of sublinear scaling. Is
+I've spent some time analyzing the possible causes of sublinear scaling. Is
 superlinear scaling possible? As I've worked with the USL over the years, I've
 found a number of cases where systems apparently do scale superlinearly. It
-manifests as a negative $\kappa$ coefficient and a USL curve that has a more
-complex shape:
+manifests as a negative $\sigma$ coefficient and a USL curve that has a more
+complex shape, rising above linear and then below again:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/superlinear}
 \end{center}
@@ -826,22 +835,96 @@ visual cues around the edges.
 \end{itemize}
 
 These three express essentially the same belief about the relationship between
-variables; the differences are relatively minor. Here's an example of a
+variables--that throughput is an independent variable and determines latency.
+The differences between them are relatively minor. Here's an example of a
 \href{http://perfcap.blogspot.nl/2008/07/enhanced-headroom-plot-in-r.html}{Cockcroft
 Headroom Plot}:
 \begin{center}
 \includegraphics[width=.75\linewidth]{scalability/chpblog3}
 \end{center}
 
-At some point I intend to analyze what it means to treat latency as a
-function of throughput, in the context of queueing theory or the USL. My initial
-reaction is that throughput isn't a proper independent variable, but I confess
-to being conflicted on this point. As long as you stay within the bounds of a
-stable system I think it might work. Please let me know if you do this work
-(e.g. rearranging the USL using Little's Law to derive response time as a
-function of throughput).
+The only trouble is, the assumption that latency is determined by throughput is
+not correct in the general case. It may appear to be true as long as you don't
+pass the point of maximum throughput and enter the territory of retrograde
+scalability, but it's easy to see such a plot is not actually a function once
+that happens:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/not-a-function}
+\end{center}
+
+The reason for this is that once you enter retrograde scalability, throughput is
+no longer under your control (e.g. you've saturated resources and you cannot
+simply pick an arrival rate for requests and get the SUT to perform them for
+you). In general, even in clean-room conditions, it is nearly impossible to
+predictably drive a desired throughput for a system, unless you maintain a very
+low utilization so requests don't queue. Throughput would only make sense as an
+independent variable, in the general case, if it were under your direct control.
+Therefore, latency as a function of throughput is probably not the way I would
+choose to plot the data.\footnote{No, not even if
+\href{http://perfdynamics.blogspot.nl/2015/07/hockey-elbow-and-other-response-time.html}{Neil Gunther does}.}
+
+In fact, I think exactly the opposite is the correct relationship. Pick a
+latency, and you can find the corresponding throughput at which that latency
+will occur. Once again using the Percona benchmark data:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/latency-vs-throughput}
+\end{center}
+
+I'm leaving this as a reminder to myself to solve the USL for throughput as a
+function of latency someday, using Little's Law. If you do it first, please
+contact me and let me know.
+
+\section{Hardware and Software Scalability}
+
+I mentioned that Neil Gunther actually defines two forms of the USL, one for
+hardware scaling and one for software. They're essentially the same equation,
+with different Greek letters.
+
+For most purposes it's not important to care about the distinction. However, it
+is {\itshape very} important, in general, to have a firm grasp on the meaning of
+the $X$ axis in the USL chart. I've been somewhat casual about it, essentially
+treating it as a generic metric of size by which we scale the system or
+workload, but I should be more precise.
+
+In fact there are at least three important dimensions of the work a system
+performs, and how it scales, and these three interact with each other. A correct
+understanding of the concepts is important to get sensible results:
+
+\begin{enumerate}
+\item The number of things producing work requests for the
+system. In a benchmark, for example, this is typically the configured
+concurrency of the benchmark---that is, the number of driver threads. It could
+also be the number of connections to the database, the number of users on a web
+application, and so on.
+\item The number of servers, using queueing theory terminology. It could be the
+number of CPUs in a server, the number of servers in a cluster, or the like.
+\item The size of the dataset. This will most typically be in the usual
+units---megabytes or gigabytes, number of rows---but will occasionally be the
+number of logical partitions in the dataset (``shards''). A
+\href{https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/}{VoltDB
+benchmark} that I analyzed once needed to be couched in terms of partitions,
+because of the configured per-partition redundancy.
+\end{enumerate}
+
+Now, what's really important to understand is that everything needs to be held
+constant relative to the unit of scale you're using. If you're measuring
+scalability at different cluster sizes, for example, you need to grow the number
+of driver threads and the data size proportionately to the number of nodes in
+the cluster, so each node receives the same amount and rate of work to perform
+upon the same amount of data no matter the cluster size. (If you hold the
+dataset constant and increase the number of nodes, you'll get superlinear
+scalability.)
+
+Other than this caveat, the Universal Scalability Law really is universal and is
+a framework that can be applied to many different situations, as long as you can
+define the variables correctly.
+
+\section{Conclusions}
+
+
 
 \section{Further Reading}
+
 				    * GCaP
 					     * Look at the Percona white paper
 						  all of the books in my picture

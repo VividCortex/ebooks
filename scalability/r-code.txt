@@ -153,3 +153,12 @@ benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
 > plot(fun, 0,70, xlab="Threads", ylab="Throughput", ylim=c(-500,15000))
 > points(benchmark$size, benchmark$tput)
 > abline(1,0)
+
+# not-a-function.pdf
+> benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+> plot(benchmark$tput, benchmark$size/benchmark$tput, xlab="Throughput", ylab="Latency")
+
+# latency-vs-througphut.pdf
+> benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+> plot(benchmark$size/benchmark$tput, benchmark$tput, xlab="Latency", ylab="Throughput")
+
