@@ -33,15 +33,41 @@
 \begin{document}
 \maketitle		% Build the cover page
 \begin{bio}		% Biographical info for "Meet the Author"
-Baron is a database expert who is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. An engineer by training, Baron has spent his career studying how teams build reliable, high performance systems, and has helped build and optimize database systems for some of the largest Internet properties. Baron has applied his systems thinking skills to both computer systems and teams of people, and has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron was an early employee at Percona, where he managed teams including consulting, support, training, and software engineering. Baron has a degree in Computer Science from the University of Virginia.
+Baron is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. Baron has helped build and optimize database systems for some of the largest Internet properties. He has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron managed consulting, support, training, and software engineering at Percona. He has a CS degree from the University of Virginia.
 \end{bio}
 \tableofcontents	% Build the table of contents
 
 \section{Introduction}
 
-XXXX
+Making systems big, fast, and efficient is one of the most interesting things
+I've done as a software engineer. It's a great feeling when you fix a
+bottleneck, and get dramatically improved performance at scale. You suddenly
+realize how wasteful your systems were before the improvement. It's really
+satisfying when it all comes together and you get great results.
 
-XXX: TODO trim down my biography
+I've participated in lots of projects that have produced those kinds of results.
+It's no coincidence that the best results came from the projects where the most
+disciplined analysis was performed up front. Like performance optimization,
+scalability optimization can be a real mystery unless you have an accurate model
+of how the world works, good measurements of how your systems are performing,
+and the ability to identify the problem and its likely fix with high certainty.
+
+What's even better than fixing problems with scalability is the ability to
+design systems (and organizations) that scale in the first place. This is worth
+its weight in gold.
+
+Scalability is quite a scientific topic, but it doesn't need to be mysterious.
+It's true that queueing theory is intimately involved, and queueing is
+complicated and unintuitive. But what's really cool is that scalability,
+correctly understood, is quite straightforward despite the complexity of what's
+going on behind the scenes.
+
+I wrote this book to help you understand the simple, but profoundly
+powerful, truths about scalability. I also wanted to help you understand the
+connections between scalability and other disciplines, such as performance
+optimization or the study of queueing. My hope is that this book is as
+transformational and rewarding for you as the process of learning these concepts
+has been for me.
 
 \section{What is Scalability?}
 
@@ -57,58 +83,60 @@ accommodate that growth.'' This isn't wrong, but it's still a bit informal, and
 this ebook needs a more formal definition.
 
 Dr. Neil J. Gunther provides one such definition: scalability is a {\itshape
-function}. I read Neil Gunther's books and heard him speak for quite a while
+function}. I read his books and heard him speak, but it was still a year or so
 before that sunk in for me. {\itshape Scalability can be defined as a
 mathematical function}, a relationship between independent and dependent
-variables (input and output).
+variables (input and output). This is the type of formal definition we need to
+model and analyze scalability.
 
 The most important part of understanding such a scalability model is choosing
-the right independent variable in order to analyze the way systems really
-operate.  Bondi's definition provides a good clue: {\itshape work} is the
-driving factor of scalability. Useful ways to think about work include, to
-mention a few,
+the correct variables in order to analyze the way systems really operate.
+Bondi's definition provides a good clue: {\itshape work} is the driving factor
+of scalability. Useful ways to think about work include, to mention a few,
 
 \begin{itemize}
 \item Units of work (requests).
 \item The rate of requests over time (arrival rate).
-\item The number of units of work in progress at a time (concurrency).
+\item The number of units of work in a system at a time (concurrency).
 \item The number of customers or users sending requests.
 \end{itemize}
 
-Each of these can be sensible independent variables for the scalability function
-in different circumstances. For example, in benchmarks it's quite common to
-configure the number of threads the benchmark uses to send requests to a
-database. The benchmark usually sends requests as fast as possible, assuming
-zero think time, so the arrival rate is related to, but not strictly controlled
-by, the benchmark configuration (since it is determined by how quickly the database finishes each request).
+Each of these can play sensible roles in the scalability function, depending on
+how you view it. For example, it's quite common to configure the number of
+threads a benchmark runs to send requests to a database. The benchmark usually
+sends requests as fast as possible, assuming zero think time, so the arrival
+rate is related to, but not strictly controlled by,\footnote{Because it is
+determined by how quickly the database finishes each request.} the benchmark
+configuration.
 
-One might say that load or concurrency is the input to the benchmark's
+You could say that the amount of work requested is the input to the benchmark's
 scalability function, and the completion rate is the output.
 
 In another scenario, you might vary the number of CPUs for the system under test
 (SUT) while holding constant the load per CPU, or if it's a clustered database,
 vary the cluster size and hold constant the load per node. In this case, the
-independent variable is the system resources.
+independent variable is the system size and the dependent variable is the
+completion rate.
 
-In most cases I've analyzed, either concurrency or resources are usually
-sensible independent variables for a scalability function. So for
-the purposes of this book, we'll consider scalability to be {\itshape a function
-of concurrency or capacity}. The dependent variable is usually the rate at which
-the system can process work, or {\itshape throughput}.
-
-XXX chart with axes
-
-XXX the preceding few para are pretty confusing
+In most cases I've analyzed, either size or load are the sensible
+independent variables for the scalability function. So for the purposes of this
+book, we'll consider scalability to be {\itshape a function of size or load}.
+The dependent variable will be the rate at which the system can complete work,
+or {\itshape throughput}. The hope is that the system should produce more work
+as size or load grow, so it should be an increasing function.
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/size-vs-load}
+\end{center}
 
 For those who are like me and need extra emphasis, I'll repeat that this is a
-mathematical function, with concurrency or capacity on the $X$ axis, and
-throughput on the $Y$ axis.
+mathematical function, with size or load on the $X$ axis, and throughput on the
+$Y$ axis. We'll make this more precise later.
 
 \section{Linear Scalability: The Holy Grail}
 
 In my experience, never was a marketechture slide deck created that mentions
-scalability without also including the word ``linear.'' But like many other things
-in scalability, that word is {\itshape horribly} abused.
+scalability without also including the word ``linear.'' But as you might expect,
+``linear scalability'' is not what people would have you believe.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/inigo}
 \end{center}
@@ -138,7 +166,7 @@ This may seem like a pointless rant, but it's actually important if you want to
 be able to design and improve highly scalable systems.
 
 Spotting bogus linearity claims is fun. Here are some ways
-marketing departments make systems appear linear:
+``benchmarketing'' makes systems appear linear:
 
 \begin{itemize}
 \item Show graphs without numbers, so readers can't do the math.
@@ -146,7 +174,8 @@ marketing departments make systems appear linear:
 \item Begin the axes, especially the $Y$ axis, at a nonzero value.
 \end{itemize}
 
-Here is an example that employs some of these tricks.
+Here is a real example, redacted to protect the not-so-innocent, that employs
+some of these tricks.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/voltdb1}
 \end{center}
@@ -202,8 +231,8 @@ exhibit {\itshape retrograde} scalability at some point:
 This is quite common in the real world---you scale things up and at some point
 your system starts going backwards and {\itshape losing} performance, instead of
 just gaining more and more slowly. In the MySQL 5.0 days, for example, it was
-common to see people getting better performance out of 4-core servers than
-8-core servers.
+common to see people upgrading from 4-core servers to 8-core servers and losing
+performance.
 
 Why does this happen? Why don't systems scale linearly, and why do they
 sometimes show retrograde scalability?
@@ -245,47 +274,50 @@ Note that every linearly scalable system is just as scalable as any other,
 regardless of the slope of the line. They have different performance but
 identical scalability characteristics: speedup is unlimited. 
 
-Serialization appears in most human and computer systems at some point, for
-example as a final stage of assembling the multiple outputs generated in
-parallel into a single final result. As parallelization increases, serialization
-becomes the limiting factor. This is codified in
-\href{https://en.wikipedia.org/wiki/Amdahl\%27s\_law}{Amdahl's Law}, which states that
-the maximum speedup possible is the reciprocal of the serial fraction. This fits
-neatly into the bottom of the equation. Here $\sigma$ is the serial fraction of
-the work, the {\itshape coefficient of serialization}:
+Serialization appears in most systems\footnote{Including teams of people.} at
+some point, for example as a final stage of assembling the multiple outputs
+generated in parallel into a single final result. As parallelization increases,
+serialization becomes the limiting factor. This is codified in
+\href{https://en.wikipedia.org/wiki/Amdahl\%27s\_law}{Amdahl's Law}, which
+states that the maximum speedup possible is the reciprocal of the serial
+fraction. We'll add a term to the denominator expressing the serial fraction of
+the work, multiplied by $\sigma$, the coefficient of serialization, and now we
+have Amdahl's Law:
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1)}
 \]
 
 Serialization creates contention, and a system that is partially serialized will
 asymptotically approach a ceiling on speedup. If $\sigma$ is .05, for example,
-the speedup approaches 20.
+the speedup approaches 20. Let's see that graphically:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/amdahl}
 \end{center}
 
 Remember the system I mentioned earlier, which a salesperson claimed to have
 97\% scalability with each additional node? That's 3\% loss of scalability per
-node, so this system will never be able to achieve a speedup factor of more than
-33, no matter how many nodes are added to it.
+node, so this system will never achieve a speedup factor of more than 33, no
+matter how many nodes it has.
 
 The last bit is the crosstalk penalty, also called the consistency or coherency
 penalty.\footnote{I call it crosstalk because in my opinion it's the best
 description of the pairwise communication that must occur to make distributed
-data or other shared resources consistent or coherent.} You probably remember
-that the number of edges in a fully connected graph is $n(n-1)$, which is
-$\mathcal{O}(n^2)$.\footnote{If you're not familiar with it,
-\href{https://www.vividcortex.com/blog/2013/10/23/big-o-notation-made-simple/}{this
-blog post introduces Big-O notation}.} Crosstalk potentially happens between
-each pair of workers in the system (threads, CPUs, servers, etc). We represent
-the amount of crosstalk with another parameter, $\kappa$:
+data or other shared resources consistent or coherent.} Crosstalk potentially
+happens between each pair of workers in the system (threads, CPUs, servers,
+etc).  You probably remember that the number of edges in a fully connected graph
+is $n(n-1)$.  We represent the amount of crosstalk with another term, multiplied
+by $\kappa$, the coefficient of crosstalk. This is the USL:
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \kappa N(N-1)}
 \]
 
-The crosstalk penalty grows fast. Because it's quadratic, eventually it grows
-faster than the linear speedup of the ideal system we started with, no matter
-how small $\kappa$ is.  That's what makes retrograde scalability happen:
+The crosstalk penalty grows fast. Because it's quadratic,\footnote{The cost of
+$n(n-1)$ is $\mathcal{O}(n^2)$. If you're not familiar with it,
+\href{https://www.vividcortex.com/blog/2013/10/23/big-o-notation-made-simple/}{this
+blog post introduces Big-O notation}.} eventually it grows faster than the
+linear speedup of the ideal system we started with, no matter how small $\kappa$
+is. That's what makes retrograde scalability happen, as you can see in the
+following chart:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/usl}
 \end{center}
@@ -304,47 +336,43 @@ find clustered systems that scale well beyond a couple dozen nodes or so.
 If you'd like to experiment with this interactively, I've made a graph of it at
 \href{https://www.desmos.com/calculator/2l0jcjmsxn}{Desmos}.
 
-If you're curious, the USL is based on queueing theory. It's equivalent to
-synchronous repairman queueing. You can read more about that in Neil Gunther's
-books. If you're not familiar with queueing theory, I wrote a highly
-approachable introduction called
+If you're curious, the USL is based on queueing theory; Neil Gunther proved that
+it's equivalent to synchronous repairman queueing. If you're not familiar with
+queueing theory, I wrote a highly approachable introduction called
 \href{https://www.vividcortex.com/resources/queueing-theory/}{Everything You
 Need To Know About Queueing Theory}.
 
 \section{Measuring Scalability}
 
-To recap, up until now we've figured out the right dimensions for a formal model
+To recap, at this point we've figured out the right dimensions for a formal model
 of scalability that seems to behave as we know real systems behave, and examined
 Neil Gunther's USL, which fits that framework well and gives us an equation for
 scalability. (Are you excited yet?)
 
 Now what do we do with it?
 
-Great question! It turns out we can do a lot of extremely useful things with it.
-Unlike a lot of models of system behavior, this one is actually practical to
-apply in the real world. That's the real genius of it, in fact. Not only is the
-equation uncomplicated, but the variables it describes are easy to get from a
-lot of systems.  If you've ever tried to model system behavior with queueing
-theory, e.g. the Erlang C formula, you're going to love how simple it is to get
-results with the USL. So many modeling techniques are foiled by the inability to
-get the measurements you need.
+Great question! It turns out we can do a lot of extremely useful things with the
+USL.  Unlike a lot of models of system behavior, this one is actually practical
+to apply in the real world. That's the real genius of it, in fact. Not only is
+the equation uncomplicated, but the variables it describes are easy to get most
+of the time.
 
-The thing I've used the USL for the most is measuring system scalability, by
-working backwards from observed system behavior and deriving the likely
-coefficients. To accomplish this, you need a set of measurements of the system's
-size as you see fit to define it (usually concurrency or node count) and
-throughput. Then you {\itshape fit} the USL to this dataset, using nonlinear
-least squares regression. This is a statistical technique that finds the optimal
-coefficient values in order to calculate a best-fit line through the
-measurements. The result is values for $\lambda$, $\sigma$, and $\kappa$.
+I use the USL mostly for modeling system scalability, by working backwards from
+observed system behavior and estimating the likely coefficients. To accomplish
+this, you need a set of measurements of the system's load or size (usually
+concurrency or node count) and the corresponding throughput. Then you {\itshape
+fit} the USL to this dataset, using nonlinear least squares regression. This is
+a statistical technique that finds the optimal coefficient values in order to
+calculate a best-fit line through the measurements. The result is values for
+$\lambda$, $\sigma$, and $\kappa$.
 
 If you're reading about the USL in Neil Gunther's books, he takes a different
 approach. First, he doesn't use regression to determine $\lambda$, he assumes
-that is something you can measure in a controlled way at $N=1$. (I've often
-found that's not true for me.) Secondly, there are a couple of different forms
-of the USL---one for hardware scaling and one for software scaling---which are
-the same equation, but with different parameters. I've found the distinction to
-be largely academic, although I will talk a bit more about this later.
+that you can measure it in a controlled way at $N=1$. (I've often found that's
+not true for me.) Secondly, there are a couple of different forms of the
+USL---one for hardware scaling and one for software scaling---which are the same
+equation, but with different parameters. I've found the distinction to be
+largely academic, although I will talk a bit more about this later.
 
 Examples of systems I've analyzed with the USL include:
 
@@ -425,7 +453,7 @@ usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1) + kappa * size *
    (size-1)), benchmark, start=c(sigma=0.1, kappa=0.01, lambda=1000))
 summary(usl)
 sigma <- coef(usl)['sigma']
-kappa <- coeff(usl)['kappa']
+kappa <- coef(usl)['kappa']
 lambda <- coef(usl)['lambda']
 u=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
 plot(u, 0, max(benchmark$size)*2, xlab="Size", ylab="Throughput", lty="dashed")
@@ -481,8 +509,7 @@ systems that aren't in a controlled laboratory setting.
 Throughput and latency are two common measures of performance. Most benchmarks
 measure overall system throughput, and claims of performance are almost always
 in throughput terms: ``a million transactions per second,'' and so on.
-Benchmarks usually define performance narrowly as how much work the system can
-do.
+Benchmarks usually define performance as how much work the system can do.
 
 On the other hand, users care mostly about the performance of individual
 requests. A user's opinion about your website's performance is based entirely on
@@ -493,8 +520,8 @@ Which view is right? Both. System performance is measured in throughput, and
 request performance is measured in latency.
 
 We've seen that the USL can model and forecast how system size affects
-throughput. Can it also model latency? Yes, it can, because of a
-relationship called Little's Law:
+throughput. Can it also model latency? Yes, it can when the independent variable
+is concurrency, because of a relationship called Little's Law:
 \[
 N = X R
 \]
@@ -504,14 +531,17 @@ equal to the throughput times the mean response time. This relationship is
 valid for stable systems, in which all requests eventually complete.
 
 It's straightforward to use Little's Law together with the USL and solve for
-response time as a function of concurrency.  The result is a quadratic function:
+response time as a function of concurrency.\footnote{ Note that if the number of
+nodes is the independent variable, it's a different scenario. Such a benchmark
+should hold concurrency per node constant, to load all nodes equally as the
+cluster grows.} The result is a quadratic function:
 \[
 R(N)=\frac{1+\sigma(N-1)+\kappa N(N-1)}{\lambda}
 \]
 
-So if the USL is correct, response time is related to the square of
-concurrency. Here's the same data we saw previously, now inverted and used to
-predict response time.
+According to the model, response time is related to the square of concurrency.
+Here's the same data we saw previously, now inverted and used to predict
+response time.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/cisco-tput}
 \end{center}
@@ -520,7 +550,7 @@ Be careful not to confuse this chart with another famous ``hockey stick'' chart,
 that of response time versus utilization, which is familiar from queueing
 theory:
 \begin{center}
-\includegraphics[width=.85\linewidth]{queueing-theory/hockey-stick-1}
+\includegraphics[width=.85\linewidth]{scalability/hockey}
 \end{center}
 
 The difference is that one chart uses utilization as the independent variable,
@@ -541,7 +571,7 @@ planning. The practical purpose is usually something like the following:
 \item How soon will the system begin to perform badly as load increases?
 \item How many servers will I need for the holidays?
 \item Is this system close to a breaking point?
-\item Is the server overprovisioned? By how much?
+\item Are we overprovisioned? By how much?
 \end{itemize}
 
 Capacity planning is often a difficult problem because it's hard to tell what a
@@ -570,7 +600,7 @@ the SUT can consistently perform well.}
 
 Another way I've tried to predict system capacity in the past is with queueing
 theory, using the Erlang C formula to predict response time at a given
-utilization.  Unfortunately, this requires that you know request service times,
+utilization.  Unfortunately, this requires that you know service times,
 which are often impossible to obtain. You can measure total response time, but
 that includes waiting time in the queue, so it's not the same thing as the
 service time. The utilization is also often deceptive, because the real
@@ -579,7 +609,7 @@ measure correctly too. Most people I know consider the Erlang approach to be
 difficult to apply.
 
 If load tests, benchmarks, and queueing theory are difficult to use, can the USL
-help? To a point, yes, it can.  The USL's point of maximum predicts the system's
+help? Yes, it can.  The USL's point of maximum predicts the system's
 maximum throughput, so it's a way to assess a system's capacity.  Because the
 USL is a {\itshape model}, it can help you use observed data to predict how a
 system will perform under load beyond what you can observe. As a result you can
@@ -614,12 +644,11 @@ ebook} for more on this topic.
 
 \section{Using the USL to Improve Scalability}
 
-One of the best uses of the USL is to evaluate and understand {\itshape why} a
-system doesn't scale as well as it might. Armed with this, you might know where
-to look for bottlenecks, so you can alleviate them and improve the system's
-scalability. With practice, you'll also develop a mindset of scalability,
-building intuition about which design decisions might cause serious
-sublinearity.
+One of the best uses of the USL is to explain {\itshape why} a system doesn't
+scale as well as it might. Armed with this knowledge, you know where to look for
+bottlenecks, so you might be able to alleviate them and improve the system's
+scalability.  With practice, you'll also develop a mindset of scalability,
+building intuition about which design decisions can cause serious sublinearity.
 
 An example will help illustrate. A few years ago PayPal published
 \href{https://www.paypal-engineering.com/2013/11/22/node-js-at-paypal/}{benchmark
@@ -653,17 +682,19 @@ This is a great real-life example of key scalability tenets:
 \item Avoid crosstalk and blocking or queueing.
 \end{itemize}
 
+\newpage
+
 \section{Thinking Critically About The USL}
 
 For many people, the USL is a huge shift in mindset. I know it was for me. But
 is it the be-all and end-all? Of course not.
 
 Not only is the USL unsuitable for solving every problem related to scalability
-or capacity planning, sometimes it doesn't work all that well for the problems
-it can solve. The examples I've shown thus far are remarkable in that they're
-extremely clean data. Real-world systems often have noisy data that doesn't
-``look like'' the USL much at all. It may look more like something your cat
-threw up on the screen. Even when there is a nice-looking shape to the data,
+or capacity planning, sometimes it doesn't even work well for the problems it
+{\itshape can} solve. The examples I've shown thus far are remarkable in that
+they're extremely clean data. Real-world systems often have noisy data that
+doesn't ``look like'' the USL much at all. It may look more like something your
+cat threw up on the screen. Even when there is a nice-looking shape to the data,
 regression can produce unphysical results, or refuse to produce results.
 
 And then there are the systems for which you have nice clean-room measurements,
@@ -684,11 +715,10 @@ What, then, is the USL good for? The answer is lots.
 
 First of all, a model is better than no model. In the absence of a model
 explaining the workings of system scalability, there isn't even a point of
-reference against which you can compare your expectations and results. There's
-no basis for a conversation. There's no frame of reference to say, ``I think
-this system should scale better than it does,'' or ``This system's behavior
-makes no sense.'' Whether the USL is usable or not, it still provides a
-framework. Without it, why not just draw lines at will? You
+comparison to assess your expectations and results. There's no frame of
+reference to say, ``I think this system should scale better than it does,'' or
+``This system's behavior makes no sense.'' Whether the USL is applicable or not,
+it still provides a framework. Without it, why not just draw lines at will? You
 could get a set of French curves and draw curves as directed by your muse. No
 one could say you're wrong.
 \begin{center}
@@ -734,23 +764,23 @@ appear to model the observed data somewhat more closely:
 \end{center}
 
 Jayanta Choudhury has suggested changes to the USL to model cases such as this,
-where resources apparently become saturated.  His proposed model, called the
-Asymptotically Improved Super-Serial Law,\footnote{See {\itshape Parameter
+where resources apparently become saturated.  His 
+Asymptotically Improved Super-Serial Law\footnote{See {\itshape Parameter
 Estimation of Asymptotically Improved Super-serial Scalability Law} by Dr.
-Jayanta Choudhury, of TeamQuest Corporation} is slightly more complex:
+Jayanta Choudhury, of TeamQuest Corporation.} is slightly more complex:
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \sigma \kappa N^\beta (N-1)}
 \]
 
-The $\beta$ parameter ranges from 0 to 1, inclusive. Unfortunately it's
-more difficult to estimate parameters for this model, making it a bit harder to
-use than the USL. The following plot shows the logarithmic extension I proposed
-above in a solid line, plotted with the AISSL in a dashed line, on the same
-dataset. As can be seen visually, the logarithmic variation fits the data
-better.
+The $\beta$ parameter ranges from 0 to 1, inclusive. The following plot shows
+the logarithmic variant I proposed in a solid line, and the AISSL in a dashed
+line. As you can see, the logarithmic variation fits the data better.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/aissl}
 \end{center}
+
+Unfortunately it's a bit difficult to estimate parameters for the AISSL, making
+it harder to use than the USL. 
 
 As I'm sure you can imagine, you could play games like this all day long.
 Dreaming up an idea is much easier than proving that it's correct or showing
@@ -770,18 +800,19 @@ complex shape, rising above linear and then below again:
 
 At first I dismissed this result as unphysical (how can there be less than zero
 contention?), but after repeatedly seeing this happen and having many
-conversations with Neil Gunther about it, I started to wonder. So did Neil, and
+conversations with Neil Gunther about it, I started to wonder. So did he, and
 eventually he was able to reproduce and explain the effect on a
 \href{https://queue.acm.org/detail.cfm?id=2789974}{large-scale Hadoop TeraSort
 benchmark}.
 
-The TeraSort case is quite a specific one. In general, I would explain
-superlinear scalability as a disproportionate scaling of some resource relative
-to the load placed upon it, creating an economy of scale. For example, adding
-more nodes to a clustered database system adds more memory; if the dataset size
-is not scaled proportionately, then more of the data fits into memory on each
-node, and access times improve relative to disk reads. Any resource that is more
-efficient when shared than when used singly may cause this effect.
+The TeraSort case is quite a specific one. In the more general case, I would
+explain superlinear scalability as a disproportionate scaling of some resource
+relative to the load placed upon it, creating an economy of scale. For example,
+adding more nodes to a clustered database system adds more memory; if the
+dataset size is not scaled proportionately, then more of the data fits into
+memory on each node, and access times improve relative to disk reads. Any
+resource that is more efficient when shared than when used singly may cause this
+effect.
 
 It's worth noting that this initial boost, depending upon its cause, may be
 countered by a correspondingly disproportionate ``payback'' later when
@@ -840,14 +871,14 @@ The differences between them are relatively minor. Here's an example of a
 \href{http://perfcap.blogspot.nl/2008/07/enhanced-headroom-plot-in-r.html}{Cockcroft
 Headroom Plot}:
 \begin{center}
-\includegraphics[width=.75\linewidth]{scalability/chpblog3}
+\includegraphics[width=.55\linewidth]{scalability/chpblog3}
 \end{center}
 
 The only trouble is, the assumption that latency is determined by throughput is
 not correct in the general case. It may appear to be true as long as you don't
 pass the point of maximum throughput and enter the territory of retrograde
-scalability, but it's easy to see such a plot is not actually a function once
-that happens:
+scalability, but it's easy to see such a plot is not actually a function of
+throughput after that happens:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/not-a-function}
 \end{center}
@@ -896,7 +927,7 @@ system. In a benchmark, for example, this is typically the configured
 concurrency of the benchmark---that is, the number of driver threads. It could
 also be the number of connections to the database, the number of users on a web
 application, and so on.
-\item The number of servers, using queueing theory terminology. It could be the
+\item The number of servers (as defined inqueueing theory). It could be the
 number of CPUs in a server, the number of servers in a cluster, or the like.
 \item The size of the dataset. This will most typically be in the usual
 units---megabytes or gigabytes, number of rows---but will occasionally be the
@@ -925,9 +956,13 @@ define the variables correctly.
 
 \section{Further Reading}
 
-				    * GCaP
-					     * Look at the Percona white paper
-						  all of the books in my picture
+* GCaP
+* Look at the Percona white paper
+all of the books in my picture
+missing: worst case usage, best case usage - compare to USL, why doesn't it
+achieve at least this?
+- everything you've learned applies to organizations and their communications
+designs too.
 
 \newpage
 
