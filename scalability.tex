@@ -20,32 +20,38 @@
 
 %% Required resource info
 \resourceleft%
-	{The Strategic IT Manager's Guide To Building A Scalable DBA Team}
-	{}
-	{img/scalable-dba-team}
-	{https://www.vividcortex.com/resources/building-scalable-dba-team/}
+	{Everything You Need To Know About Queueing Theory}
+	{This highly accessible
+	introduction demystifies queueing theory without using pages full of equations,
+	helping you build intuition about it.}
+	{img/queueing-theory}
+	{https://www.vividcortex.com/resources/queueing-theory/}
 \resourceright%
 	{Case Study: SendGrid}
-	{VividCortex has been instrumental in finding issues. It's the go-to solution for seeing what's happening in production systems.}
+	{VividCortex has been instrumental in finding issues. It's the go-to solution
+	for seeing what's happening in production systems.}
 	{img/sendgrid-thumbnail}
 	{https://www.vividcortex.com/resources/case-studies/sendgrid/}
 
 \begin{document}
 \maketitle		% Build the cover page
 \begin{bio}		% Biographical info for "Meet the Author"
-Baron is well-known for his contributions to the MySQL, PostgreSQL, and Oracle communities. Baron has helped build and optimize database systems for some of the largest Internet properties. He has written several books, including O'Reilly's best-selling High Performance MySQL. Prior to founding VividCortex, Baron managed consulting, support, training, and software engineering at Percona. He has a CS degree from the University of Virginia.
+Baron is a performance and scalability expert who participates in various
+database, opensource, and distributed systems communities. He has helped build
+and scale many large, high-traffic services for Fortune 1000 clients. He has
+written several books, including O'Reilly's best-selling High Performance MySQL.
+Baron has a CS degree from the University of Virginia.
 \end{bio}
 \tableofcontents	% Build the table of contents
 
 \section{Introduction}
 
-Making systems big, fast, and efficient is one of the most interesting things
-I've done as a software engineer. It's a great feeling when you fix a
-bottleneck, and get dramatically improved performance at scale. You suddenly
-realize how wasteful your systems were before the improvement. It's really
-satisfying when it all comes together and you get great results.
+Making systems big, fast, and efficient is one of the most interesting and
+satisfying things I've done. It's a great feeling when you fix a bottleneck, and
+get dramatically improved performance at scale. You suddenly realize how
+wasteful your systems were before the improvement.
 
-I've participated in lots of projects that have produced those kinds of results.
+I've participated in lots of projects that have produced those kinds of outcomes.
 It's no coincidence that the best results came from the projects where the most
 disciplined analysis was performed up front. Like performance optimization,
 scalability optimization can be a real mystery unless you have an accurate model
@@ -80,19 +86,19 @@ Wikipedia's definition of scalability, borrowed from a 2000 paper by Andr\'e B.
 Bondi, is ``the capability of a system, network, or process to
 handle a growing amount of work, or its potential to be enlarged in order to
 accommodate that growth.'' This isn't wrong, but it's still a bit informal, and
-this ebook needs a more formal definition.
+this book needs a more formal definition.
 
 Dr. Neil J. Gunther provides one such definition: scalability is a {\itshape
 function}. I read his books and heard him speak, but it was still a year or so
-before that sunk in for me. {\itshape Scalability can be defined as a
+before I understood. {\itshape Scalability can be defined as a
 mathematical function}, a relationship between independent and dependent
 variables (input and output). This is the type of formal definition we need to
 model and analyze scalability.
 
 The most important part of understanding such a scalability model is choosing
-the correct variables in order to analyze the way systems really operate.
-Bondi's definition provides a good clue: {\itshape work} is the driving factor
-of scalability. Useful ways to think about work include, to mention a few,
+the correct variables to describe the way systems really operate.  Bondi's
+definition provides a good clue: {\itshape work} is the driving factor of
+scalability. Useful ways to think about work include, to mention a few,
 
 \begin{itemize}
 \item Units of work (requests).
@@ -122,7 +128,7 @@ In most cases I've analyzed, either size or load are the sensible
 independent variables for the scalability function. So for the purposes of this
 book, we'll consider scalability to be {\itshape a function of size or load}.
 The dependent variable will be the rate at which the system can complete work,
-or {\itshape throughput}. The hope is that the system should produce more work
+or {\itshape throughput}. The hope is that the system should complete more work
 as size or load grow, so it should be an increasing function.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/size-vs-load}
@@ -206,7 +212,7 @@ sublinear scaling, is the key to building more scalable systems.  That's why
 it's really important to be a linearity skeptic.  It's not just being pedantic.
 
 The best way to think about linearity is as a ratio of the system's performance
-at a size of 1, if possible. Neil Gunther calls this the {\itshape efficiency}.
+at a size of 1. Neil Gunther calls this the {\itshape efficiency}.
 If a system produces 1800 transactions per second with 1 node, then ideally 4
 nodes produce 7200 transactions per second. That would be 100\% efficient. If
 the system loses a bit of efficiency with each node and 4 nodes produce, say,
@@ -214,14 +220,14 @@ the system loses a bit of efficiency with each node and 4 nodes produce, say,
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/linear2}
 \end{center}
-If you do this math, you'll often be surprised at how large the loss of
-efficiency is.  Graphs can be deceptive, but the numbers are quite
+If you do this math, you'll often be surprised at how large the 
+efficiency loss is.  Graphs can be deceptive, but the numbers are quite
 clear.\footnote{Drawing a linear scaling line on the graph helps, too. Without
 that line, the eye tends to see the graph as more linear than it really is, and
-the loss of efficiency becomes less obvious.}
+the efficiency loss becomes less obvious.}
 
 
-In the real world there's almost always some loss of efficiency, and if you can
+In the real world there's almost always some efficiency loss, and if you can
 figure out why, you may be able to fix it. In fact, you've probably noticed that
 real systems tend not only to fall behind linear scalability a bit, but actually
 exhibit {\itshape retrograde} scalability at some point:
@@ -237,12 +243,11 @@ performance.
 Why does this happen? Why don't systems scale linearly, and why do they
 sometimes show retrograde scalability?
 
-According to Neil Gunther, there are two reasons: {\bfseries serialization} and
-{\bfseries crosstalk}. Serialization degrades scalability because parts of the
-work can't be parallelized, so speedup is limited. Crosstalk introduces a
-fast-growing coherency delay as workers (threads, CPUs, etc) block on shared
-mutable state and communication mechanisms. We'll explore these effects in the
-next section.
+According to Neil Gunther, there are two reasons: {\bfseries contention} and
+{\bfseries crosstalk}. Contention degrades scalability because parts of the work
+can't be parallelized and queue up, so speedup is limited. Crosstalk introduces
+a coherency penalty as workers (threads, CPUs, etc) communicate to share and
+synchronize mutable state. We'll explore these effects in the next section.
 
 \section{The Universal Scalability Law}
 
@@ -250,8 +255,8 @@ Neil Gunther's Universal Scalability Law (USL) provides a formal definition of
 scalability,\footnote{Neil Gunther originally called a slightly different form
 of the USL ``superserial,'' and you may encounter this terminology, especially
 in older books and papers.} and a conceptual framework for understanding,
-evaluating, comparing, and improving scalability. It does this by quantifying
-the effects of linear speedup, serialization delay, and coherency delay due to
+evaluating, comparing, and improving scalability. It does this by modeling
+the effects of linear speedup, contention delay, and coherency delay due to
 crosstalk.
 
 Let's see how this works, piece by piece. An ideal system of size 1
@@ -264,7 +269,7 @@ X(N) = \frac{\lambda N}{1}
 
 The $\lambda$ parameter defines the slope of the line. I call it the {\itshape
 coefficient of performance}. It's how fast the system performs in the special
-case when there's no serialization or crosstalk penalty.
+case when there's no contention or crosstalk penalty.
 Here are two ideal systems, with $\lambda$ of 1800 and 800, respectively.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/ideal-linear}
@@ -274,20 +279,21 @@ Note that every linearly scalable system is just as scalable as any other,
 regardless of the slope of the line. They have different performance but
 identical scalability characteristics: speedup is unlimited. 
 
-Serialization appears in most systems\footnote{Including teams of people.} at
+Contention appears in most systems\footnote{Including teams of people. This is a
+joke but it's also true in the queueing sense.} at
 some point, for example as a final stage of assembling the multiple outputs
 generated in parallel into a single final result. As parallelization increases,
-serialization becomes the limiting factor. This is codified in
+contention becomes the limiting factor. This is codified in
 \href{https://en.wikipedia.org/wiki/Amdahl\%27s\_law}{Amdahl's Law}, which
 states that the maximum speedup possible is the reciprocal of the serial
 fraction. We'll add a term to the denominator expressing the serial fraction of
-the work, multiplied by $\sigma$, the coefficient of serialization, and now we
+the work, multiplied by $\sigma$, the coefficient of contention, and now we
 have Amdahl's Law:
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1)}
 \]
 
-Serialization creates contention, and a system that is partially serialized will
+A system with contention will
 asymptotically approach a ceiling on speedup. If $\sigma$ is .05, for example,
 the speedup approaches 20. Let's see that graphically:
 \begin{center}
@@ -324,7 +330,7 @@ following chart:
 
 That's the Universal Scalability Law in all its glory.  This plot has the same
 parameters as the ones I showed before, where a system of size 4 produced only
-72\% of its ideal output. That system has 5\% serialization and 2\% crosstalk,
+72\% of its ideal output. That system has 5\% contention and 2\% crosstalk,
 and now that I've plotted it out to size 20 you can see it's embarrassingly
 inefficient.  In fact, we should have given up trying to scale this system after
 size 6 or so.
@@ -336,11 +342,41 @@ find clustered systems that scale well beyond a couple dozen nodes or so.
 If you'd like to experiment with this interactively, I've made a graph of it at
 \href{https://www.desmos.com/calculator/2l0jcjmsxn}{Desmos}.
 
-If you're curious, the USL is based on queueing theory; Neil Gunther proved that
-it's equivalent to synchronous repairman queueing. If you're not familiar with
-queueing theory, I wrote a highly approachable introduction called
+\section{The USL's Relationship to Queueing Theory}
+
+The USL is closely related to queueing theory. Neil Gunther proved that it's
+equivalent to synchronous repairman queueing. If you're not familiar with
+queueing theory, I wrote an approachable introduction called
 \href{https://www.vividcortex.com/resources/queueing-theory/}{Everything You
 Need To Know About Queueing Theory}.
+
+The two causes of sublinearity have important relationships to queueing theory.
+Contention, the first term we added to the denominator to obtain Amdahl's Law,
+expresses the penalty from queueing delay that occurs when there is competition
+for shared resources---the servers (in the queueing theory sense) that process
+work from queues.
+
+The queue length is {\itshape nonlinear} with respect to utilization and
+therefore to offered load. Queueing theory is confusing and counterintuitive! As
+the queues lengthen, the queueing delay lengthens in direct proportion.
+
+As you probably know, queueing theory treats service time---the amount of time
+it takes to complete a job after it leaves the queue and enters service---as
+independent of utilization or queueing. The job takes as long as needed to
+execute all the instructions, whether the server is busy or idle. The customer's
+total wait time at a busy server is longer only because of queueing delay.
+
+Coherency penalty, which comes from crosstalk, actually expresses an {\itshape
+increase in service time} that is not due to queueing delay. As the system has
+to do more crosstalk to synchronize mutable shared state, the jobs take longer
+and longer. This is {\itshape not} due to queueing---the job is already out of
+the queue and in service.
+
+These effects are clearly visible in the USL when it enters the region of
+retrograde scalability. An increase in service time is the only thing that can
+explain retrograde scalability. If the service time remained constant,
+throughput would be a flat line. Queue length and queue wait time cannot explain
+retrograde scalability; queueing can only cap throughput, not decrease it.
 
 \section{Measuring Scalability}
 
@@ -371,8 +407,8 @@ approach. First, he doesn't use regression to determine $\lambda$, he assumes
 that you can measure it in a controlled way at $N=1$. (I've often found that's
 not true for me.) Secondly, there are a couple of different forms of the
 USL---one for hardware scaling and one for software scaling---which are the same
-equation, but with different parameters. I've found the distinction to be
-largely academic, although I will talk a bit more about this later.
+equation, but with different parameters. For simplicity I'm treating them as
+interchangeable. I will write a bit more about this later.
 
 Examples of systems I've analyzed with the USL include:
 
@@ -531,10 +567,7 @@ equal to the throughput times the mean response time. This relationship is
 valid for stable systems, in which all requests eventually complete.
 
 It's straightforward to use Little's Law together with the USL and solve for
-response time as a function of concurrency.\footnote{ Note that if the number of
-nodes is the independent variable, it's a different scenario. Such a benchmark
-should hold concurrency per node constant, to load all nodes equally as the
-cluster grows.} The result is a quadratic function:
+response time as a function of concurrency.  The result is a quadratic function:
 \[
 R(N)=\frac{1+\sigma(N-1)+\kappa N(N-1)}{\lambda}
 \]
@@ -562,6 +595,68 @@ use queueing theory to assess this in a more nuanced way, such as the
 probability that any given request needed to wait more than a set amount of
 time.
 
+XXXXX
+
+It may appear to be
+true as long as you don't pass the point of maximum throughput and enter the
+territory of retrograde scalability, but it's easy to see such a plot is not
+actually a function of throughput after that happens:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/not-a-function}
+\end{center}
+
+You can see a hint in the chart that a single throughput value may produce
+multiple values for latency, just as a single value of throughput may be
+associated with multiple values of concurrency in the USL if there's a nonzero
+coherency penalty.
+
+And the point is, that {\itshape does} happen. We all know that this is what
+happens in the real world. Anyone who's benchmarked, modeled, and analyzed
+system behavior has seen retrograde scaling.
+
+If there's no retrograde scaling---that is, if $\kappa$ = 0---then this model is
+actually valid. After eliminating the
+coherency term, substituting in Little's Law, and solving for latency as a
+function of throughput, the result is an exponential function:
+\[
+R(X) = \frac{\sigma - 1}{\sigma X - \lambda}
+\]
+
+What this says is that systems that scale according to Amdahl's Law have
+exponentially increasing response time as throughput increases.
+Response time goes to infinity as throughput approaches $\lambda/\sigma$:
+
+cisco-x-v-r-amdahl.pdf
+
+The reason for this is that once you enter retrograde scalability, throughput is
+no longer under your control (e.g. you've saturated resources, service times are
+increasing quadratically, and you cannot simply pick an arrival rate for
+requests and get the SUT to perform them for you). In general, even in
+clean-room conditions, it is nearly impossible to predictably drive a desired
+throughput for a system, unless you maintain a very low utilization so requests
+don't queue. Throughput would only make sense as an independent variable, in the
+general case, if it were under your direct control.  Therefore, latency as a
+function of throughput is not the way I would choose to plot the
+data.\footnote{No, not even if
+\href{http://perfdynamics.blogspot.nl/2015/07/hockey-elbow-and-other-response-time.html}{Neil Gunther does}.}
+
+In fact, I think exactly the opposite is the correct relationship. Pick a
+latency, and you can find the corresponding throughput at which that latency
+will occur, just as I showed in the capacity planning thought exercise. Once
+again using the Percona benchmark data:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/latency-vs-throughput}
+\end{center}
+
+
+I'm leaving this as a reminder to myself to solve the USL equation for
+throughput as a function of latency someday, using Little's Law. If you do it
+first, please contact me and let me know.
+
+XXX
+\[
+X(R)=\frac{\sqrt{\sigma^2+\kappa^2+2\kappa(2\lambda R+\sigma-2)}-\kappa+\sigma}{2\kappa R}
+\]
 \section{Capacity Planning with the USL}
 
 ``How much load can this system sustain?'' is a common question in capacity
@@ -569,20 +664,18 @@ planning. The practical purpose is usually something like the following:
 
 \begin{itemize}
 \item How soon will the system begin to perform badly as load increases?
-\item How many servers will I need for the holidays?
-\item Is this system close to a breaking point?
+\item How many servers will I need for the expected holiday load?
+\item Is this system close to a point of failure?
 \item Are we overprovisioned? By how much?
 \end{itemize}
 
 Capacity planning is often a difficult problem because it's hard to tell what a
-system's true capacity is. The USL can be helpful in understanding this, to a
-point.
+system's true capacity is. The USL can help you estimate this.
 
-There are conventional ways to determine system capacity, but they're often
-difficult, expensive, and don't give results you can really believe in. For
-example, you can set up load tests, but it takes a lot of work and time, and the
-results are suspect because the workload is always artificial in some
-way.
+Conventional ways to determine system capacity are often difficult, expensive,
+and don't give results you can really believe in. For example, you can set up
+load tests, but it takes a lot of work and time, and the results are suspect
+because the workload is always artificial in some way.
 
 You can also run benchmarks, but most benchmarks are pretty useless for
 predicting a system's usable capacity. In addition to being an artificial
@@ -604,18 +697,83 @@ utilization.  Unfortunately, this requires that you know service times,
 which are often impossible to obtain. You can measure total response time, but
 that includes waiting time in the queue, so it's not the same thing as the
 service time. The utilization is also often deceptive, because the real
-utilization of the resources you're trying to measure can be difficult to
+utilization of the resources you're trying to model can be difficult to
 measure correctly too. Most people I know consider the Erlang approach to be
 difficult to apply.
 
 If load tests, benchmarks, and queueing theory are difficult to use, can the USL
-help? Yes, it can.  The USL's point of maximum predicts the system's
-maximum throughput, so it's a way to assess a system's capacity.  Because the
-USL is a {\itshape model}, it can help you use observed data to predict how a
-system will perform under load beyond what you can observe. As a result you can
-get a much better idea of how close you are to the system's maximum capacity.
+help? Yes, it can.  Because the USL is a {\itshape model}, it can help you
+predict how a system will perform under load beyond what you can observe. The
+USL's point of maximum predicts the system's maximum throughput, so it's a way
+to assess a system's capacity.  It can help you get a better idea of how close
+you are to the system's maximum capacity.
 
-The USL has a few nice properties:
+Here's an example. Imagine that we had measured the first 10 data points in the
+Percona benchmark, in a live production environment serving real users, not a
+lab. Here's the result of fitting the USL to the data:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/cisco-2}
+\end{center}
+
+Using the formula $N_{max}=\sqrt{(1-\sigma)/\kappa}$, the USL predicts a
+max of 16,049 queries per second at a concurrency of 46 threads.
+
+I have a rule of thumb for using the USL to project out into the unknown. I've
+seen so many systems that appear to be scaling beautifully, cleanly fitting the
+USL---just as this one does---and then they hit rough waters, that I don't trust
+anything farther out than twice the measured throughput or twice the
+measured concurrency, whichever comes first. And that's if I'm not seeing
+telltale signs of leveling off or retrograde throughput. If I see those signs, I
+lower my expectations accordingly. I will also include other information such as
+CPU utilization to guide my estimates, if I have it, but in the absence of more
+data this is a good way to keep expectations capped.
+
+Back to the model: I have measurements only to $N=10$, where observed throughput
+is 7,867, so I'm going to compute the predicted throughput at $N=20$. The result
+is a forecasted throughput of 12,572. This is less than twice my maximum
+observed throughput, so I'll allow it. In my experience, it's an optimistic but
+not unrealistic guess that I won't get more than about 12,500 queries per second
+from this server. (As you may remember, this system topped out at 12,211 QPS.)
+
+The outcome is that my system appears to be operating at about half of its
+maximum capacity. However, as discussed previously, maximum throughput isn't
+maximum {\itshape usable} capacity. Again, when the system is at its maximum
+throughput, response time is probably terrible, and will be extremely
+inconsistent. That's why it's more important to focus on the system's maximum
+throughput within the constraints of a service level objective.
+
+As a first step towards this, I can use average latency to help understand the
+potential QoS end-users will get from this server. Again using the rearranged
+form of the USL to forecast response times, I obtain the following:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/cisco-3}
+\end{center}
+
+Using the estimated coefficients and the formula for response time,
+$R(N)=(1+\sigma(N-1)+\kappa N(N-1))/\lambda$, I can predict a mean response time
+of 0.00159 seconds at 20 threads. Let's imagine that this is unacceptable; I
+need mean response times to be 15ms or less. Solving the response time equation
+as a function of latency lets me use it to compute the maximum usable
+concurrency. The resulting equation has two roots; I'm only interested in the
+positive one:
+\[
+N(R)=\frac{\kappa-\sigma+\sqrt{\sigma^2+\kappa^2+2\kappa(2\lambda R+\sigma-2)}} {2\kappa}
+\]
+
+Plugging in an $R$ target of 0.0015 yields $N$ = 17, so if I want to avoid
+violating my SLO I can't drive my server higher than approximately 11,450 QPS.
+All of which is to say I'm actually at about two-thirds of my usable capacity; I
+can grow traffic about 150\% before I get into trouble, if I'm lucky.
+
+This process is something like what I might use if I were encountering this
+server in the wild. It's not perfect; as Niels Bohr said, ``It's hard to make
+predictions, especially about the future.'' Despite the uncertainty that
+remains, this approach is much better than staring at a chart and thinking, ``I
+don't know, it looks like it's scaling linearly and CPU utilization is only
+10\%, so I guess we have a lot of headroom!''
+
+The USL has a few nice properties that make it suitable for this type of
+capacity planning:
 
 \begin{itemize}
 \item It's a ``black box'' technique, which uses data that's usually easy to get.
@@ -624,31 +782,26 @@ The USL has a few nice properties:
 \item The USL is highly intuitive in comparison to most other approaches.
 \end{itemize}
 
-One of the major caveats is that maximum throughput isn't maximum {\itshape
-usable} capacity. Again, when the system is at its maximum throughput, response
-time is probably terrible, and will be extremely inconsistent. That's why it's
-more important to focus on the system's maximum throughput within the
-constraints of a service level objective.
-
-Another important thing to realize is that a lot of systems perform worse than
-the USL predicts they will, because their degradation in scalability at larger
-sizes is more severe than predicted. As a result, I suggest viewing the USL's
-prediction as optimistic: ``I won't count on being able to scale this system as
-high as the USL predicts I can.''
+I would just repeat my caution that a lot of systems perform worse than the USL
+predicts they will, because their degradation in scalability at larger sizes is
+more severe than predicted. This is why I suggest viewing the USL's prediction
+as optimistic: ``I won't count on being able to scale this system as high as the
+USL predicts I can.''
 
 You can also combine the USL with selected techniques from queueing theory, such
-as the Square Root Staffing Rule, to understand how much capacity is needed and
+as the Square Root Staffing Rule, to forecast how much capacity is needed and
 what quality of service it will provide. See the aforementioned
 \href{https://www.vividcortex.com/resources/queueing-theory/}{queueing theory
-ebook} for more on this topic.
+book} for more on this topic.
 
 \section{Using the USL to Improve Scalability}
 
 One of the best uses of the USL is to explain {\itshape why} a system doesn't
-scale as well as it might. Armed with this knowledge, you know where to look for
-bottlenecks, so you might be able to alleviate them and improve the system's
-scalability.  With practice, you'll also develop a mindset of scalability,
-building intuition about which design decisions can cause serious sublinearity.
+scale as well as it might. Armed with this knowledge, you can get clues about
+where to look for bottlenecks, so you might be able to alleviate them and
+improve the system's scalability.  With practice, you'll also develop a mindset
+of scalability, building intuition about which design decisions can cause
+serious sublinearity.
 
 An example will help illustrate. A few years ago PayPal published
 \href{https://www.paypal-engineering.com/2013/11/22/node-js-at-paypal/}{benchmark
@@ -670,26 +823,37 @@ Here are the plots and the key scalability parameters:
 These systems scale very differently,\footnote{Both of them scale pretty poorly,
 in fact.} and for very different reasons.  In a nutshell, the Java benchmark
 shows much higher crosstalk penalty, whereas the NodeJS benchmark exhibits more
-serialization. Examining the architectures of the two systems reveals why: the
-Java app is multi-threaded and NodeJS is single-threaded with an event loop, and
-the PayPal blog post even mentions that they used ``a single core for the
-NodeJS application compared to five cores in Java.''
+contention from queueing and serialization. Examining the architectures of the
+two systems reveals why: the Java app is multi-threaded and NodeJS is
+single-threaded with an event loop, and the PayPal blog post even mentions that
+they used ``a single core for the NodeJS application compared to five cores in
+Java.''
 
 This is a great real-life example of key scalability tenets:
 
 \begin{itemize}
-\item Avoid serialization and make things as parallelizable as possible.
-\item Avoid crosstalk and blocking or queueing.
+\item Make things as parallelizable as possible to avoid serialization and queueing.
+\item Avoid crosstalk and synchronization.
 \end{itemize}
 
-\newpage
+If you're using the USL to model and analyze system scalability, another
+valuable practice is to approach the USL as a pessimistic scenario. Synchronous
+repairman queueing, the basis of the USL, is actually a worst-case in terms of
+the amount of queueing delay that occurs in a system. This is another way of
+saying that well-built systems theoretically ought to scale {\itshape at least}
+as well as the USL predicts. This should prompt you to ask the question, ``why
+is this system degrading more than it should?'' The answer to that is to look at
+whether the system degrades because of contention (queueing, serialization) or
+crosstalk (synchronization, communication, pairwise data interchange). If you
+can identify the likely cause, you might suspect that you need to look at mutex
+contention, for example.
 
 \section{Thinking Critically About The USL}
 
 For many people, the USL is a huge shift in mindset. I know it was for me. But
 is it the be-all and end-all? Of course not.
 
-Not only is the USL unsuitable for solving every problem related to scalability
+Not only is the USL not the answer for every problem related to scalability
 or capacity planning, sometimes it doesn't even work well for the problems it
 {\itshape can} solve. The examples I've shown thus far are remarkable in that
 they're extremely clean data. Real-world systems often have noisy data that
@@ -698,7 +862,7 @@ cat threw up on the screen. Even when there is a nice-looking shape to the data,
 regression can produce unphysical results, or refuse to produce results.
 
 And then there are the systems for which you have nice clean-room measurements,
-highly reproducible, but they just don't fit the USL very well. I could show
+highly reproducible, but they just don't seem to fit the USL very well. I could show
 many examples. I've seen systems that appear to scale nicely, following the USL,
 but suddenly flatline instead of continuing a graceful curve, or abruptly
 degrade way faster than predicted---or the reverse, appearing to degrade more
@@ -709,38 +873,51 @@ region where the higher-order terms prevail.  Here's an example:
 \end{center}
 
 Maybe this is queue saturation or resource saturation, or maybe it's something
-else, but the USL is unaware of it.
+else, but it is not something the USL has the capability to model or predict. If
+you'd tried to predict this behavior by fitting the USL to the first dozen or so
+data points, you'd get something like this:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/handlersocket-2}
+\end{center}
 
-What, then, is the USL good for? The answer is lots.
+The USL doesn't give you the tools to see those kinds of behavioral shifts
+coming. There's no way to tell it how many servers are servicing queues, for
+example. I've seen many benchmarks that fit the USL nicely with increasing
+numbers of threads until there is one thread per physical CPU core; then there's
+an abrupt change such as those in the diagram. I've seen others where a resource
+such as network bandwidth becomes a limiting factor.
+
+If the USL is incomplete, what is it good for? The answer is lots.
 
 First of all, a model is better than no model. In the absence of a model
 explaining the workings of system scalability, there isn't even a point of
 comparison to assess your expectations and results. There's no frame of
 reference to say, ``I think this system should scale better than it does,'' or
-``This system's behavior makes no sense.'' Whether the USL is applicable or not,
-it still provides a framework. Without it, why not just draw lines at will? You
-could get a set of French curves and draw curves as directed by your muse. No
-one could say you're wrong.
+``This system's behavior makes no sense.'' Whether the USL is applicable to a
+given problem or not, it still provides a framework. Without it, why not just
+draw lines at will? You could get a set of French curves and follow your muse.
+No one could say you're wrong.
 \begin{center}
 \includegraphics[width=.85\linewidth,trim={0 8cm 0 0},clip]{scalability/french_curve}
 \end{center}
 
-In an objective sense, the USL is incomplete or wrong, perhaps both. I don't
-think it matters very much, but if it were complete and correct, it would
-describe more systems and scenarios than it does in my experience. As Richard
-Feynman said in a 1964 lecture at Cornell University, ``If it disagrees with
-experiment, it’s wrong.  That simple statement is the key to science. It
-doesn’t make a difference how beautiful your guess is, it doesn’t make a
-difference how smart you are, who made the guess or what his name is---if it
-disagrees with experiment, it’s wrong. That’s all there is to it.''
+In an objective sense, the USL is both incomplete and wrong.  If it were
+complete and correct, for example including knowledge about capped resources
+such as number of CPUs (which is a vitally important parameter for queueing
+theory problems) or network bandwidth, it would certainly describe more systems
+and scenarios than it does in my experience. As Richard Feynman said in a 1964
+lecture at Cornell University, ``If it disagrees with experiment, it’s wrong.
+That simple statement is the key to science.''
 
-This is not to say the USL isn't useful. It's incredibly useful. But we must not
-put it onto a pedestal and worship it.
+This is not to say the USL isn't useful. As George E. P. Box famously said,
+``all models are wrong, but some are useful.'' The USL is incredibly useful. But
+we must not put it onto a pedestal and worship it.  
 
-I'd also like to note that one could quite easily conjecture and analyze other
-USL-like models. For example, given that many computer algorithms can be shown
+I'd also like to note that one could easily conjecture and analyze other
+USL-like models. For example, given that many computer algorithms, such as those
+that might perform pairwise interchange to cause the coherency penalty, can be shown
 by analysis to be $\mathcal{O}(n\log{}n)$ instead of $\mathcal{O}(n^2)$, perhaps
-we could assume that the quadratic $\kappa$ term doesn't really behave like its
+we could imagine that the quadratic $\kappa$ term doesn't really behave like its
 worst-case, and the term could be replaced by a logarithmic term, like so?
 \[
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \kappa \log(N)(N-1)}
@@ -755,7 +932,7 @@ and the logarithmic variant is the dashed line.
 
 You might think that you could choose parameters to the standard USL to make it
 follow the dashed line better, but it doesn't work. The functions are of
-different order and won't behave the same.
+different order and type, and won't behave the same.
 
 Would this be a better model for the data I showed previously? Visually, it does
 appear to model the observed data somewhat more closely:
@@ -786,6 +963,22 @@ As I'm sure you can imagine, you could play games like this all day long.
 Dreaming up an idea is much easier than proving that it's correct or showing
 how it might arise analytically from the underlying mechanisms as we understand
 them to operate in the system.
+
+The more practical way to look at the examples I've given in this section is to
+stop trying to predict what happens after retrograde scalability or resource
+saturation kicks in. There are at least two good reasons for taking this
+pragmatic approach.
+
+\begin{enumerate}
+\item {\bfseries It's a different model.} We know the system's behavior is being
+influenced by factors that weren't present at a smaller size. It's not just
+different parameters, the entire model has changed, and it's doubtful that a
+single model exists that could explain those wildly different behaviors.
+\item {\bfseries It's pointless.}  When we see retrograde scaling, we know the
+system has gone past the point where it's in trouble. Nothing good can come of
+pushing it further, so why should we try to model how bad it is? It's a lost
+cause with no practical purpose.
+\end{enumerate}
 
 \section{Superlinear Scaling}
 
@@ -823,7 +1016,8 @@ differently at sizes 1 and 2 than they do at 3 and above. For example, at size 1
 there is no crosstalk or contention---it isn't a distributed system. At size 2
 special-cases may be in play. At size 3 and above, usually generic algorithms
 and techniques suited for any size $n$ are in use. Some clustered systems have
-to be benchmarked or measured at larger sizes in order to ignore these effects.
+to be benchmarked or measured at larger sizes in order to avoid skew from these
+effects.
 
 \section{Other Scalability Models}
 
@@ -851,8 +1045,8 @@ You should ignore this model because by definition it doesn't work. Rather than
 use it, I'd suggest that you get out that French curve set again and get in
 touch with your inner artist.
 
-A few other models that I've seen expressed in graphical form, but not
-mathematically and lacking analysis, are:
+Another model that I've seen is latency as a function of throughput. Here
+are three examples:
 
 \begin{itemize}
 \item New Relic's scalability chart, which plots latency as a function of
@@ -871,39 +1065,14 @@ The differences between them are relatively minor. Here's an example of a
 \href{http://perfcap.blogspot.nl/2008/07/enhanced-headroom-plot-in-r.html}{Cockcroft
 Headroom Plot}:
 \begin{center}
-\includegraphics[width=.55\linewidth]{scalability/chpblog3}
+\includegraphics[width=.5\linewidth]{scalability/chpblog3}
 \end{center}
+
+in graphical form, but lacking formal analysis or a mathematical definition, 
 
 The only trouble is, the assumption that latency is determined by throughput is
-not correct in the general case. It may appear to be true as long as you don't
-pass the point of maximum throughput and enter the territory of retrograde
-scalability, but it's easy to see such a plot is not actually a function of
-throughput after that happens:
-\begin{center}
-\includegraphics[width=.85\linewidth]{scalability/not-a-function}
-\end{center}
+not correct in the general case contemplated by the USL. 
 
-The reason for this is that once you enter retrograde scalability, throughput is
-no longer under your control (e.g. you've saturated resources and you cannot
-simply pick an arrival rate for requests and get the SUT to perform them for
-you). In general, even in clean-room conditions, it is nearly impossible to
-predictably drive a desired throughput for a system, unless you maintain a very
-low utilization so requests don't queue. Throughput would only make sense as an
-independent variable, in the general case, if it were under your direct control.
-Therefore, latency as a function of throughput is probably not the way I would
-choose to plot the data.\footnote{No, not even if
-\href{http://perfdynamics.blogspot.nl/2015/07/hockey-elbow-and-other-response-time.html}{Neil Gunther does}.}
-
-In fact, I think exactly the opposite is the correct relationship. Pick a
-latency, and you can find the corresponding throughput at which that latency
-will occur. Once again using the Percona benchmark data:
-\begin{center}
-\includegraphics[width=.85\linewidth]{scalability/latency-vs-throughput}
-\end{center}
-
-I'm leaving this as a reminder to myself to solve the USL for throughput as a
-function of latency someday, using Little's Law. If you do it first, please
-contact me and let me know.
 
 \section{Hardware and Software Scalability}
 
@@ -922,14 +1091,14 @@ performs, and how it scales, and these three interact with each other. A correct
 understanding of the concepts is important to get sensible results:
 
 \begin{enumerate}
-\item The number of things producing work requests for the
+\item {\bfseries Drivers.} The number of things producing work requests for the
 system. In a benchmark, for example, this is typically the configured
 concurrency of the benchmark---that is, the number of driver threads. It could
 also be the number of connections to the database, the number of users on a web
 application, and so on.
-\item The number of servers (as defined inqueueing theory). It could be the
+\item {\bfseries Servers.} The number of servers as defined in queueing theory. It could be the
 number of CPUs in a server, the number of servers in a cluster, or the like.
-\item The size of the dataset. This will most typically be in the usual
+\item {\bfseries Data.} The size of the dataset. This will most typically be in the usual
 units---megabytes or gigabytes, number of rows---but will occasionally be the
 number of logical partitions in the dataset (``shards''). A
 \href{https://www.percona.com/blog/2011/02/28/is-voltdb-really-as-scalable-as-they-claim/}{VoltDB
@@ -938,15 +1107,15 @@ because of the configured per-partition redundancy.
 \end{enumerate}
 
 Now, what's really important to understand is that everything needs to be held
-constant relative to the unit of scale you're using. If you're measuring
-scalability at different cluster sizes, for example, you need to grow the number
-of driver threads and the data size proportionately to the number of nodes in
-the cluster, so each node receives the same amount and rate of work to perform
-upon the same amount of data no matter the cluster size. (If you hold the
-dataset constant and increase the number of nodes, you'll get superlinear
-scalability.)
+constant relative to the unit of scale you're using, so you are changing only
+one variable at a time. If you're measuring scalability at different cluster
+sizes, for example, you need to grow the number of driver threads and the data
+size proportionately to the number of nodes in the cluster, so each node
+receives the same amount and rate of work to perform upon the same amount of
+data no matter the cluster size. (If you hold the dataset constant and increase
+the number of nodes, you'll get superlinear scalability.)
 
-Other than this caveat, the Universal Scalability Law really is universal and is
+Asid from this caveat, the Universal Scalability Law really is universal and is
 a framework that can be applied to many different situations, as long as you can
 define the variables correctly.
 
@@ -959,8 +1128,6 @@ define the variables correctly.
 * GCaP
 * Look at the Percona white paper
 all of the books in my picture
-missing: worst case usage, best case usage - compare to USL, why doesn't it
-achieve at least this?
 - everything you've learned applies to organizations and their communications
 designs too.
 

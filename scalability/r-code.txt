@@ -168,3 +168,38 @@ benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
 > par(new=TRUE)
 > u=function(x){x/x}
 > plot(u, 0, 1, xlab="", ylab="", ylim=c(0,25), lty="dashed")
+
+# cisco-2.pdf
+# cisco-3.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/cisco-prefix.txt", sep="")
+usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1) + kappa * size * (size-1)), benchmark, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+summary(usl)
+sigma <- coef(usl)['sigma']
+kappa <- coef(usl)['kappa']
+lambda <- coef(usl)['lambda']
+usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
+plot(usl, 0, max(benchmark$size)*8, xlab="Size", ylab="Throughput")
+points(benchmark$size, benchmark$tput)
+u=function(x){(1+sigma*(x-1)+kappa*x*(x-1))/lambda}
+plot(u,0,max(benchmark$size)*3,xlab="Concurrency", ylab="Response Time")
+points(benchmark$size, benchmark$size/benchmark$tput)
+
+# handlersocket-2.pdf
+options(scipen=5)
+hs <- read.csv("~/repos/ebooks/scalability/handlersocket.txt", sep="")
+sigma = .055
+kappa = .0001
+lambda = 10821
+usl=function(x){y=x*lambda/(1+sigma*(x-1)+kappa*x*(x-1))}
+plot(usl, 0, 200, xlab="Connections", ylab="Throughput")
+points(hs$conc, hs$tput)
+
+# cisco-x-v-r-amdahl.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1)), benchmark, start=c(sigma=0.1, lambda=1000))
+summary(usl)
+sigma <- coef(usl)['sigma']
+lambda <- coef(usl)['lambda']
+f=function(x){(sigma-1)/(sigma*x-lambda)}
+plot(f,1,lambda/sigma*.8, ylab="Latency", xlab="Throughput")
+points(benchmark$tput, benchmark$size/benchmark$tput)
