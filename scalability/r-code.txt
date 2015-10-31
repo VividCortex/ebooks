@@ -52,7 +52,13 @@ points(benchmark$size, benchmark$tput)
 
 # cisco-tput.pdf
 u=function(x){(1+sigma*(x-1)+kappa*x*(x-1))/lambda}
-plot(u,0,max(benchmark$size)*2,xlab="Concurrency", ylab="Response Time", lty="dashed")
+v=function(x){(1+sigma*(x-1))/lambda}
+w=function(x){(1+0*x)/lambda}
+plot(u,0,max(benchmark$size)*2,xlab="Concurrency", ylab="Response Time", ylim=c(0,.0058))
+par(new=TRUE)
+plot(v,0,max(benchmark$size)*2,xlab="", ylab="", lty="dashed", ylim=c(0,.0058))
+par(new=TRUE)
+plot(w,0,max(benchmark$size)*2,xlab="", ylab="", lty="dashed", ylim=c(0,.0058))
 points(benchmark$size, benchmark$size/benchmark$tput)
 
 # paypal.pdf
@@ -158,10 +164,6 @@ benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
 > benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
 > plot(benchmark$tput, benchmark$size/benchmark$tput, xlab="Throughput", ylab="Latency")
 
-# latency-vs-througphut.pdf
-> benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
-> plot(benchmark$size/benchmark$tput, benchmark$tput, xlab="Latency", ylab="Throughput")
-
 # hockey.pdf
 > u=function(x){1/(1-x)}
 > plot(u,0,1,xlab="Utilization", ylab="Residence Time",ylim=c(0,25))
@@ -203,3 +205,41 @@ lambda <- coef(usl)['lambda']
 f=function(x){(sigma-1)/(sigma*x-lambda)}
 plot(f,1,lambda/sigma*.8, ylab="Latency", xlab="Throughput")
 points(benchmark$tput, benchmark$size/benchmark$tput)
+
+# r-function-x-amdahl.pdf
+sigma = .06
+lambda = 40
+f=function(x){(sigma-1)/(sigma*x-lambda)}
+plot(f,1,lambda/sigma*.9, ylab="Latency", xlab="Throughput")
+
+# nose.pdf
+lambda=40
+sigma=.06
+kappa=.06
+f=function(x){(lambda*x)/(1+sigma*(x-1)+kappa*x*(x-1))}
+N = c(1:100)
+vals = data.frame(conc=N/15, tput=f(N/15))
+plot(vals$tput, vals$conc/vals$tput, xlab="Throughput", ylab="Latency")
+
+# x-function-r.pdf
+xr=function(x){(sqrt(sigma^2+kappa^2+2*kappa*(2*lambda*x+sigma-2))-kappa+sigma)/(2*kappa*x)}
+plot(xr, 0.025, .25, ylab="Throughput", xlab="Latency")
+#points(vals$conc/vals$tput, vals$tput)
+
+# nose-equation.pdf
+xmax=f(sqrt((1-sigma)/kappa))
+d=function(x){(-sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2) }
+e=function(x){(sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2)}
+plot(d, 0, xmax, ylim=c(0,.1), xlim=c(0,85),xlab="Throughput", ylab="Latency")
+par(new=T)
+plot(e, 45, xmax, ylim=c(0,.1), xlim=c(0,85),lty="dashed",xlab="",ylab="")
+
+# latency-vs-througphut.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1) + kappa * size * (size-1)), benchmark, start=c(sigma=0.1, kappa=0.01, lambda=1000))
+sigma <- coef(usl)['sigma']
+kappa <- coef(usl)['kappa']
+lambda <- coef(usl)['lambda']
+xr=function(x){(sqrt(sigma^2+kappa^2+2*kappa*(2*lambda*x+sigma-2))-kappa+sigma)/(2*kappa*x)}
+plot(xr, 0, 0.004, xlab="Latency", ylab="Throughput", lty="dashed")
+points(benchmark$size/benchmark$tput, benchmark$tput)
