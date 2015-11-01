@@ -613,7 +613,8 @@ theory:
 
 The difference is that one chart uses utilization as the independent variable,
 which ranges only from 0 to 1, whereas the other uses concurrency, which has no
-fixed upper limit.
+fixed upper limit.\footnote{The relationship between concurrency and utilization
+is nonlinear; according to the USL, it is quadratic.}
 
 Little's Law also lets you rearrange the USL in terms of the relationship
 between throughput and latency, which is useful for a few reasons. It lets you
@@ -703,6 +704,24 @@ through the benchmark's results. It way underestimates how fast latency grows.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/cisco-x-v-r-amdahl}
 \end{center}
+
+Most people probably never will see a system curve around the tip of the nose
+and start climbing backwards ``in the wild,'' because the system's performance
+becomes extremely bad.  This usually won't happen in production because the
+load-generating systems (and users) are finite and don't continue adding work to
+the system you're measuring. For example, you likely will not see this happen in
+a production database because all the Apache workers get busy waiting for
+queries to finish, so they can't issue more.
+
+If you won't see it in production, then where will you? Easy---in benchmarks,
+where you can fire up a practically unlimited number of driver threads. I've
+seen it in many benchmarks myself.
+
+If production systems won't climb around the tip of the nose, does the nose's
+precise equation matter? Yes, because if you want to model how response time
+behaves as it approaches the nose, you need the right model. With the wrong
+model you'll be way off when doing things like capacity planning, which
+coincidentally is the next topic I want to cover.
 
 \section{Capacity Planning with the USL}
 
@@ -897,6 +916,15 @@ whether the system degrades because of contention (queueing, serialization) or
 crosstalk (synchronization, communication, pairwise data interchange). If you
 can identify the likely cause, you might suspect that you need to look at mutex
 contention, for example.
+
+One of the biggest changes in my mindset since learning to use the USL is that
+it's possible, and important, to explain why systems behave as they do. As Neil
+Gunther \href{https://twitter.com/DrQz/status/659086348729499649}{tweeted}, it's
+no longer enough just to benchmark, measure, and present the results on a chart.
+You can and should explain the results. As I
+\href{https://twitter.com/xaprb/status/657354190109458433}{tweeted} myself,
+``Benchmarking is good, publishing results is better, explaining results is
+best. Publishing charts only (pictures without numbers) is sad.''
 
 \newpage
 \section{Thinking Critically About The USL}
