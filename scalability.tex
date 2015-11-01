@@ -387,6 +387,11 @@ explain retrograde scalability. If the service time remained constant,
 throughput would be a flat line. Queue length and queue wait time cannot explain
 retrograde scalability; queueing can only cap throughput, not decrease it.
 
+% Another explanation for kappa is not crosstalk/coherency, but queue
+% management. See Little's "50 years later" paper. A reasonable cost for queue
+% management would be O(log n). This would make service times increase
+% logarithmically instead of quadratically.
+
 \newpage
 \section{Measuring Scalability}
 
@@ -715,7 +720,10 @@ queries to finish, so they can't issue more.
 
 If you won't see it in production, then where will you? Easy---in benchmarks,
 where you can fire up a practically unlimited number of driver threads. I've
-seen it in many benchmarks myself.
+seen it in many benchmarks myself. So has John Little; his paper
+\href{https://people.cs.umass.edu/~emery/classes/cmpsci691st/readings/OS/Littles-Law-50-Years-Later.pdf}{Little’s
+Law as Viewed on Its 50th Anniversary} shows a plot of this phenomenon on page
+544.
 
 If production systems won't climb around the tip of the nose, does the nose's
 precise equation matter? Yes, because if you want to model how response time
@@ -1320,7 +1328,7 @@ advance.
 
 \section{Further Reading}
 
-The Universal Scalability Law is only a couple of decades old and there is not a
+The Universal Scalability Law is only a couple of decades old, and there is not a
 great deal of literature about it. Interested readers should purchase the
 canonical books from Dr. Neil J. Gunther. I include a variety of other excellent
 reading in the list below, but Neil Gunther's books are the definitive sources.
