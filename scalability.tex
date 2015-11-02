@@ -1156,8 +1156,8 @@ visual cues around the edges.
 \end{itemize}
 
 These three express essentially the same beliefs about the relationship between
-variables--that throughput is an independent variable and determines latency.
-AppDynamics models latency as quadratic, but otherwise
+variables--that throughput is a free parameter that can be set at will, and
+determines latency.  AppDynamics models latency as quadratic, but otherwise
 the differences among the three are relatively minor. Here's an example of a
 \href{http://perfcap.blogspot.nl/2008/07/enhanced-headroom-plot-in-r.html}{Cockcroft
 Headroom Plot}:
@@ -1169,7 +1169,7 @@ As I have shown, the relationship between throughput and response
 time is never quadratic under any circumstances, and is neither exponential 
 nor a function of throughput unless $\kappa$ is zero.
 In other words, you can't model the relationship in this way unless you
-ignore the possibility of a nonzero $\kappa$, which I can attest is far from
+ignore the possibility of a nonzero $\kappa$, which is far from
 rare. It is better to use a more capable model such as the USL.
 
 \section{Hardware and Software Scalability}
