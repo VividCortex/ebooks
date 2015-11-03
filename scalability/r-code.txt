@@ -162,7 +162,7 @@ benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
 
 # not-a-function.pdf
 > benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
-> plot(benchmark$tput, benchmark$size/benchmark$tput, xlab="Throughput", ylab="Latency")
+> plot(benchmark$tput, benchmark$size/benchmark$tput, xlab="Throughput", ylab="Latency", ylim=c(0, .004), xlim=c(0, 15000))
 
 # hockey.pdf
 > u=function(x){1/(1-x)}
@@ -203,8 +203,24 @@ summary(usl)
 sigma <- coef(usl)['sigma']
 lambda <- coef(usl)['lambda']
 f=function(x){(sigma-1)/(sigma*x-lambda)}
-plot(f,1,lambda/sigma*.8, ylab="Latency", xlab="Throughput")
+plot(f,1,lambda/sigma*.8, ylab="Latency", xlab="Throughput", ylim=c(0, .004), xlim=c(0, 15000))
 points(benchmark$tput, benchmark$size/benchmark$tput)
+
+# nose-cisco.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/cisco.txt", sep="")
+usl <- nls(tput ~ lambda*size/(1 + sigma * (size-1) + kappa*size*(size-1)), benchmark, start=c(sigma=0.1, kappa=.001, lambda=1000))
+f=function(x){lambda*x/(1 + sigma * (x-1) + kappa*x*(x-1))}
+sigma <- coef(usl)['sigma']
+lambda <- coef(usl)['lambda']
+kappa <- coef(usl)['kappa']
+xmax=f(sqrt((1-sigma)/kappa))
+d=function(x){(-sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2) }
+e=function(x){(sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2)}
+plot(d, 0, xmax, ylim=c(0,.004), xlim=c(0,15000),xlab="Throughput", ylab="Latency")
+par(new=T)
+plot(e, 45, xmax, ylim=c(0,.004), xlim=c(0,15000),lty="dashed",xlab="",ylab="")
+points(benchmark$tput, benchmark$size/benchmark$tput)
+
 
 # r-function-x-amdahl.pdf
 sigma = .06
@@ -257,3 +273,57 @@ points(benchmark$size/benchmark$tput, benchmark$tput)
 > plot(amdahl, 1, 30, ylab="", xlab="", ylim=c(0, 0.03), lty="dashed")
 > par(new=TRUE)
 > plot(linear, 1, 30, ylab="", xlab="", ylim=c(0, 0.03), lty="dashed")
+
+
+
+
+
+
+
+
+# isilon-x-v-r-amdahl.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/isilon.txt", sep="")
+amdahl <- nls(response ~ (sigma-1)/(sigma*tput-lambda), benchmark[1:9,], start=c(sigma=0.001, lambda=1416))
+sigma <- coef(amdahl)['sigma']
+lambda <- coef(amdahl)['lambda']
+# lambda=1876
+# sigma=.00591
+f=function(x){(sigma-1)/(sigma*x-lambda)}
+plot(f,1,300000, ylab="Latency", xlab="Throughput",ylim=c(0,.008), xlim=c(0,300000))
+points(benchmark$tput, benchmark$response)
+
+# nose-isilon.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/isilon.txt", sep="")
+usl=nls(tput ~ (lambda*conc)/(1+sigma*(conc-1)+kappa*conc*(conc-1)), benchmark[1:9,], start=c(sigma=0.001, kappa=0.001, lambda=1500))
+d=function(x){(-sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2) }
+e=function(x){(sqrt(x^2*(kappa^2+2*kappa*(sigma-2)+sigma^2)+2*lambda*x*(kappa-sigma)+lambda^2)+kappa*x+lambda-sigma*x)/(2*kappa*x^2)}
+sigma <- coef(usl)['sigma'] # 0.00487
+lambda <- coef(usl)['lambda'] # 1768
+kappa <- coef(usl)['kappa'] # 1.33e-06
+f=function(x){(lambda*x)/(1+sigma*(x-1)+kappa*x*(x-1))}
+xmax=f(sqrt((1-sigma)/kappa))
+g=function(x){(sigma-1)/(sigma*x-lambda)}
+plot(d, 0, xmax, ylim=c(0,.008), xlim=c(0,300000), xlab="Throughput", ylab="Latency")
+par(new=T)
+plot(e, 0, xmax, ylim=c(0,.008), xlim=c(0,300000), xlab="Throughput", ylab="Latency")
+points(benchmark$tput, benchmark$response)
+
+
+# isilon-logarithmic.pdf
+benchmark <- read.csv("~/repos/ebooks/scalability/isilon.txt", sep="")
+usl=nls(tput ~ (lambda*conc)/(1+sigma*(conc-1)+kappa*conc*(conc-1)), benchmark[1:9,], start=c(sigma=0.001, kappa=0.001, lambda=1500))
+usl_log=nls(tput ~ (lambda*conc)/(1+sigma*(conc-1)+kappa*log(conc)*(conc-1)), benchmark[1:9,], start=c(sigma=0.001, kappa=0.001, lambda=1500))
+sigma <- coef(usl)['sigma'] # 0.00487
+lambda <- coef(usl)['lambda'] # 1768
+kappa <- coef(usl)['kappa'] # 1.33e-06
+sigma_log <- coef(usl_log)['sigma'] # 0.0024
+lambda_log <- coef(usl_log)['lambda'] # 1719
+kappa_log <- coef(usl_log)['kappa'] # .000466
+f=function(x){(lambda*x)/(1+sigma*(x-1)+kappa*x*(x-1))}
+g=function(x){(lambda_log*x)/(1+sigma_log*(x-1)+kappa_log*log(x)*(x-1))}
+plot(f, 0, 1500, ylim=c(0,300000), ylab="Throughput", xlab="Concurrency")
+par(new=T)
+plot(g, 0, 1500, ylim=c(0,300000), ylab="Throughput", xlab="Concurrency", lty="dashed")
+points(benchmark$conc, benchmark$tput)
+
+

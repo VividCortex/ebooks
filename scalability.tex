@@ -394,7 +394,6 @@ explain retrograde scalability. If the service time remained constant,
 throughput would be a flat line. Queue length and queue wait time cannot explain
 retrograde scalability; queueing can only cap throughput, not decrease it.
 
-\newpage
 \section{Measuring Scalability}
 
 To recap, at this point we've figured out the right dimensions for a formal model
@@ -572,7 +571,8 @@ how quickly pages load and render.  From this viewpoint, as Cary Millsap says,
 {\itshape performance is response time}.
 
 Which view is right? Both. System performance is measured in throughput, and
-request performance is measured in latency. And because throughput and latency
+request performance is measured in latency.\footnote{Response time, latency, and
+residence time are synonymous.} And because throughput and latency
 are related, scalability also has dual meanings: the system's ability to
 complete more work at larger sizes, and its response time characteristics.
 
@@ -666,15 +666,9 @@ The other solution is simply the negative. Here's a plot of both:
 \includegraphics[width=.85\linewidth]{scalability/nose-equation}
 \end{center}
 
-%Here is a plot of the same points as previously, with axes transposed:
-%illustrate:
-%\begin{center}
-%\includegraphics[width=.85\linewidth]{scalability/nose}
-%\end{center}
-
-As you can see, this is not strictly a function of $X$, since a single $X$ value
+As you can see, this is not a simple function of $X$, since a single $X$ value
 can map to two values of $R$ due to the multiple solutions. {\itshape Response
-time is not a function of throughput if $\kappa$ is nonzero.} The inverse is
+time is not a simple function of throughput if $\kappa$ is nonzero.} The inverse is
 actually true---given a target latency, you can uniquely identify the throughput
 at which it will occur:
 \begin{equation}
@@ -694,44 +688,92 @@ $N_{max}$ from Equation \ref{n_max}. The relationship between these quantities
 is simply Little's Law.
 
 You can use Equation \ref{x_r} to model scalability and performance in terms of
-latency, just as you use the USL to model it in terms of concurrency or size.
-For example, referencing the Cisco benchmark again, you can see in a
-scatterplot that the system has exceeded the point of diminishing returns and is
-climbing up the nose:
+latency, just as you use the USL to model it in terms of concurrency or
+size.\footnote{ Because of the folded-back nature of the nose curve, it's
+difficult to use regression to estimate the USL parameters in this form. It's
+easy to use Little's Law to compute concurrency, though, and just perform the
+regression against that instead.  } For example, referencing the Cisco benchmark
+again, you can see in a scatterplot that the system has exceeded the point of
+diminishing returns and is climbing up the nose:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/not-a-function}
 \end{center}
 
-This isn't a single function of throughput, as I said previously. That is why
+This isn't a simple function of throughput, as I said previously. That is why
 you can't model it with a curve such as a parabola or an exponential function.
 The lower portion of the nose might {\itshape look like} an exponential curve,
 but it isn't. It's quite different.  Here's what happens if you try to fit an
 exponential function, such as Equation \ref{amdahl_r_x},
-through the benchmark's results. It way underestimates how fast latency grows.
+through the benchmark's results.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/cisco-x-v-r-amdahl}
+\end{center}
+
+That dramatically underestimates how fast latency grows. Using Equation \ref{x_r} is a
+better fit:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/nose-cisco}
+\end{center}
+
+Another example of this apparently beginning to happen is the
+\href{https://www.spec.org/sfs2008/results/res2014q3/sfs2008-20140609-00249.html}{SPEC
+benchmark for NFS on the Isilon S210}, which requires reporting latency as a
+function of throughput. Here are the results:
+
+\begin{table}{X[-1,l,m]|X[-1,l,m]}
+{\bfseries Throughput (ops/sec)} & {\bfseries Response (msec)} \\
+25504 & 0.7 \\
+51054 & 0.6 \\
+76667 & 0.7 \\
+102288 & 0.8 \\
+127879 & 0.9 \\
+153497 & 1.0 \\
+179261 & 1.2 \\
+205226 & 1.4 \\
+231069 & 2.0 \\
+253357 & 5.7 \\
+\end{table}
+
+Let's pretend that we didn't see the last row in that table. If you thought
+response time was an exponential function of throughput, what would you predict
+would happen at 253,357 ops/sec? Your curve would appear to ``fit'' very well,
+and again, you'd expect latency to be much lower than it actually is. Here's the
+curve, fit to all but the last point, overlaid with all the measurements:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/isilon-x-v-r-amdahl}
+\end{center}
+
+Using the USL will model the effect more closely, but note that the USL appears
+to be a bit pessimistic, a topic we'll return to later:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/nose-isilon}
 \end{center}
 
 Most people probably never will see a system curve around the tip of the nose
 and start climbing backwards ``in the wild,'' because the system's performance
 becomes extremely bad.  This usually won't happen in production because the
-load-generating systems (and users) are finite and don't continue adding work to
+load-generating systems (and users) are finite and can't continue adding work to
 the system you're measuring. For example, you likely will not see this happen in
 a production database because all the Apache workers get busy waiting for
-queries to finish, so they can't issue more.
+queries to finish, so they can't issue more. The only way to drive a system past
+the nose is to increase concurrency beyond the system's saturation point.
+Another way to look at this is that the request {\itshape arrival rate} is a
+free parameter you can choose at will, but {\itshape completion rate}
+(throughput) isn't; the system can't produce more than its capacity, no matter
+how many requests arrive.
 
 If you won't see it in production, then where will you? Easy---in benchmarks,
 where you can fire up a practically unlimited number of driver threads. I've
-seen it in many benchmarks myself. So has John Little; his paper
+seen it in many benchmarks. So has John Little; his paper
 \href{https://people.cs.umass.edu/~emery/classes/cmpsci691st/readings/OS/Littles-Law-50-Years-Later.pdf}{Little’s
 Law as Viewed on Its 50th Anniversary} shows a plot of this phenomenon on page
 544.
 
-If production systems won't climb around the tip of the nose, does the nose's
-precise equation matter? Yes, because if you want to model how response time
-behaves as it approaches the nose, you need the right model. With the wrong
-model you'll be way off when doing things like capacity planning, which
-coincidentally is the next topic I want to cover.
+To sum up: even though production systems won't climb around the tip of the
+nose, the nose's precise equation matters a lot. That's because if you want to
+model how response time behaves as it {\itshape approaches} the nose, you need
+the right model. With the wrong model you'll be way off when doing things like
+capacity planning, which coincidentally is the next topic I want to cover.
 
 \section{Capacity Planning with the USL}
 
@@ -795,15 +837,15 @@ Using the formula $N_{max}=\sqrt{(1-\sigma)/\kappa}$ from Equation \ref{n_max}, 
 max of 16,049 queries per second at a concurrency of 46 threads.
 
 I have a rule of thumb for using the USL to project out into the unknown. I've
-seen so many systems that appear to be scaling beautifully---fitting the
-USL cleanly, just as this one does---and then they hit rough waters, that I don't trust
-anything farther out than twice the measured throughput or twice the
-measured size, whichever comes first.\footnote{You'll see later why I don't just
-use throughput, when I explain superlinear scaling.} And that's if I'm not seeing
-telltale signs of leveling off or retrograde throughput. If I see those signs, I
-lower my expectations accordingly. I will also include other information such as
-CPU utilization to guide my estimates, if I have it, but in the absence of more
-data this is a good way to keep expectations capped.
+seen so many systems that appear to be scaling beautifully---fitting the USL
+cleanly, just as this one does---and then they hit rough waters, that I don't
+trust anything farther out than twice the measured throughput or twice the
+measured size, whichever comes first.\footnote{When I explain superlinear
+scaling, you'll see why I don't use throughput alone as a guide.} And that's if
+I'm not seeing telltale signs of leveling off or retrograde throughput. If I see
+those signs, I lower my expectations accordingly. I will also include other
+information such as CPU utilization to guide my estimates, if I have it, but in
+the absence of more data this is a good way to keep expectations capped.
 
 Back to the model: I have measurements only to $N=10$, where observed throughput
 is 7,867, so I'm going to compute the predicted throughput at $N=20$. The result
@@ -936,7 +978,6 @@ You can and should explain the results. As I
 ``Benchmarking is good, publishing results is better, explaining results is
 best. Publishing charts only (pictures without numbers) is sad.''
 
-\newpage
 \section{Thinking Critically About The USL}
 
 For many people, the USL is a huge shift in mindset. I know it was for me. But
@@ -1053,13 +1094,24 @@ line. As you can see, the logarithmic variation fits the data better.
 Unfortunately it's a bit difficult to estimate parameters for the AISSL, making
 it harder to use than the USL. 
 
+If you recall the Isilon example from before, it seemed that the USL was too
+pessimistic in predicting the maximum achievable throughput. This is another
+way of saying that retrograde scalability was less severe than the USL
+predicted. On the other hand, that system clearly didn't scale exactly like
+Amdahl's Law, either. Maybe the logarithmic variant of the USL is more
+realistic? I've fit the USL as a solid line and the logarithmic variant as a
+dashed line to see:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/isilon-logarithmic}
+\end{center}
+
 As I'm sure you can imagine, you could play games like this all day long.
 Dreaming up an idea is much easier than proving that it's correct or showing
 how it might arise analytically from the underlying mechanisms as we understand
 them to operate in the system.
 
-The more practical way to look at the examples I've given in this section is to
-stop trying to predict what happens after retrograde scalability or resource
+One way to look at some of the examples I've given in this section is to stop
+trying to predict what happens after retrograde scalability or resource
 saturation kicks in. There are at least two good reasons for taking this
 pragmatic approach.
 
@@ -1088,7 +1140,7 @@ complex shape, rising above linear and then below again:
 At first I dismissed this result as unphysical (how can there be less than zero
 contention?), but after repeatedly seeing this happen and having many
 conversations with Neil Gunther about it, I started to wonder. So did he, and
-eventually he was able to reproduce and explain the effect on a
+eventually he reproduced and explained the effect on a
 \href{https://queue.acm.org/detail.cfm?id=2789974}{large-scale Hadoop TeraSort
 benchmark}.
 
@@ -1119,7 +1171,6 @@ concurrency and something is inflating the apparent concurrency measurements
 (such as idling threads), all of your points will be shifted to the right on the
 scatterplot. This can cause apparently superlinear scaling.
 
-\newpage
 \section{Other Scalability Models}
 
 In addition to the USL and the variants I've already discussed, there are many
@@ -1170,12 +1221,12 @@ Headroom Plot}:
 \includegraphics[width=.60\linewidth]{scalability/chpblog3}
 \end{center}
 
-As I have shown, the relationship between throughput and response
-time is never quadratic under any circumstances, and is neither exponential 
-nor a function of throughput unless $\kappa$ is zero.
-In other words, you can't model the relationship in this way unless you
-ignore the possibility of a nonzero $\kappa$, which is far from
-rare. It is better to use a more capable model such as the USL.
+As I have shown, the relationship between throughput and response time is never
+quadratic according to the USL model, and is neither exponential nor even a
+simple function of throughput unless $\kappa$ is zero.  In other words, you
+really can't model the relationship in this way unless you ignore the
+possibility of a nonzero $\kappa$, which is far from rare. It is better to use a
+more capable model such as the USL.
 
 \section{Hardware and Software Scalability}
 
@@ -1262,7 +1313,6 @@ You can use that model just like any other form of the USL: to evaluate
 scalability, predict performance beyond what you can observe, figure out whether
 a system is scaling well enough and why, and so on.
 
-\newpage
 \section{Conclusions}
 
 The Universal Scalability Law is a wonderfully versatile, easy-to-apply, yet
