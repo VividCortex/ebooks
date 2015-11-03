@@ -243,3 +243,17 @@ lambda <- coef(usl)['lambda']
 xr=function(x){(sqrt(sigma^2+kappa^2+2*kappa*(2*lambda*x+sigma-2))-kappa+sigma)/(2*kappa*x)}
 plot(xr, 0, 0.004, xlab="Latency", ylab="Throughput", lty="dashed")
 points(benchmark$size/benchmark$tput, benchmark$tput)
+
+
+# mpp-speedup.pdf
+> sigma=.06
+> kappa=.06
+> lambda=40
+> usl=function(x){(1+sigma*(x-1)+kappa*x*(x-1))/(x*lambda)}
+> amdahl=function(x){(1+sigma*(x-1))/(x*lambda)}
+> linear=function(x){1/(x*lambda)}
+> plot(usl, 1, 30, ylab="Latency", xlab="Degree of Parallelism", ylim=c(0, 0.03))
+> par(new=TRUE)
+> plot(amdahl, 1, 30, ylab="", xlab="", ylim=c(0, 0.03), lty="dashed")
+> par(new=TRUE)
+> plot(linear, 1, 30, ylab="", xlab="", ylim=c(0, 0.03), lty="dashed")

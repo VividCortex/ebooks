@@ -378,19 +378,21 @@ total wait time at a busy server is longer only because of queueing delay.
 Coherency penalty, which comes from crosstalk, actually expresses an {\itshape
 increase in service time} that is not due to queueing delay. As the system has
 to do more crosstalk to synchronize mutable shared state, the jobs take longer
-and longer. This is {\itshape not} due to queueing---the job is already out of
-the queue and in service.
+and longer.\footnote{An alternative explanation is that the cost of managing the
+queues actually increases as they grow. My personal experience leads me to
+believe it's typically crosstalk in multi-node clusters, and it's more often
+queue management in single-server systems under high load. For examples, see
+John D.C. Little's paper {\itshape Little’s Law as Viewed on Its 50th
+Anniversary}, \href{http://on.fb.me/1NmVeGM}{http://on.fb.me/1NmVeGM},
+\href{http://bit.ly/1MtQdqM}{http://bit.ly/1MtQdqM}, and
+\href{http://bit.ly/1NNE0k4}{http://bit.ly/1NNE0k4}.} This is {\itshape not} due
+to queueing---the job is already out of the queue and in service.
 
 These effects are clearly visible in the USL when it enters the region of
 retrograde scalability. An increase in service time is the only thing that can
 explain retrograde scalability. If the service time remained constant,
 throughput would be a flat line. Queue length and queue wait time cannot explain
 retrograde scalability; queueing can only cap throughput, not decrease it.
-
-% Another explanation for kappa is not crosstalk/coherency, but queue
-% management. See Little's "50 years later" paper. A reasonable cost for queue
-% management would be O(log n). This would make service times increase
-% logarithmically instead of quadratically.
 
 \newpage
 \section{Measuring Scalability}
@@ -819,7 +821,7 @@ throughput within the constraints of a service level objective.
 
 As a first step towards this, I can use average latency to help understand the
 potential QoS end-users will get from this server. Again using the rearranged
-form of the USL to forecast response times, I obtain the following:
+form of the USL, I obtain the following response time forecast:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/cisco-3}
 \end{center}
@@ -948,21 +950,21 @@ doesn't ``look like'' the USL much at all. It may look more like something your
 cat threw up on the screen. Even when there is a nice-looking shape to the data,
 regression can produce unphysical results, or refuse to produce results.
 
-And then there are the systems for which you have nice clean-room measurements,
-highly reproducible, but they just don't seem to fit the USL very well. I could show
-many examples. I've seen systems that appear to scale nicely, following the USL,
-but suddenly flatline instead of continuing a graceful curve, or abruptly
-degrade way faster than predicted---or the reverse, appearing to degrade more
-{\itshape slowly} than predicted once you exit Amdahl territory and enter the
-region where the higher-order terms prevail.  Here's an example:
+And then there are the systems for which you have nice, highly reproducible,
+clean-room measurements, but they just don't seem to fit the USL very well. I
+could show many examples. I've seen systems that appear to scale nicely,
+following the USL, but suddenly flatline instead of continuing a graceful curve,
+or abruptly degrade way faster than predicted---or the reverse, appearing to
+degrade more {\itshape slowly} than predicted once you exit Amdahl territory and
+enter the region where the higher-order terms prevail.  Here's an example:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/handlersocket}
 \end{center}
 
 Maybe this is queue saturation or resource saturation, or maybe it's something
-else, but it is not something the USL has the capability to model or predict. If
-you'd tried to predict this behavior by fitting the USL to the first dozen or so
-data points, you'd get something like this:
+else, but the USL can't model or predict it. If you'd tried to predict this
+behavior by fitting the USL to the first dozen or so data points, you'd get
+something like this:
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/handlersocket-2}
 \end{center}
@@ -974,38 +976,41 @@ numbers of threads until there is one thread per physical CPU core; then there's
 an abrupt change such as those in the diagram. I've seen others where a resource
 such as network bandwidth becomes a limiting factor.
 
+I say this not to criticize the USL, but to point out that even a Swiss Army
+Knife is not always the tool you need.
+
 If the USL is incomplete, what is it good for? The answer is lots.
 
-First of all, a model is better than no model. In the absence of a model
+First of all, any model is better than none. In the absence of a model
 explaining the workings of system scalability, there isn't even a point of
 comparison to assess your expectations and results. There's no frame of
-reference to say, ``I think this system should scale better than it does,'' or
-``This system's behavior makes no sense.'' Whether the USL is applicable to a
+reference to say, ``this system should scale better than it does,'' or
+``these measurements look wrong.'' Whether the USL is applicable to a
 given problem or not, it still provides a framework. Without it, why not just
 draw lines at will? You could get a set of French curves and follow your muse.
-No one could say you're wrong.
 \begin{center}
-\includegraphics[width=.85\linewidth,trim={0 8cm 0 0},clip]{scalability/french_curve}
+\includegraphics[width=.75\linewidth,trim={0 8cm 0 0},clip]{scalability/french_curve}
 \end{center}
 
-In an objective sense, the USL is both incomplete and wrong.  If it were
-complete and correct, for example including knowledge about capped resources
-such as number of CPUs (which is a vitally important parameter for queueing
-theory problems) or network bandwidth, it would certainly describe more systems
-and scenarios than it does in my experience. As Richard Feynman said in a 1964
-lecture at Cornell University, ``If it disagrees with experiment, it’s wrong.
-That simple statement is the key to science.''
+As George E. P. Box famously said, ``all models are wrong, but some are
+useful.'' And as Richard Feynman said in a 1964 lecture at Cornell University,
+``If it disagrees with experiment, it’s wrong.  That simple statement is the key
+to science.'' If the USL were able to model the physical world completely and
+correctly, for example including knowledge about capped resources such as number
+of CPUs (which is a vitally important parameter for queueing theory problems) or
+network bandwidth, it would certainly describe more systems and scenarios than
+it does in my experience.
 
-This is not to say the USL isn't useful. As George E. P. Box famously said,
-``all models are wrong, but some are useful.'' The USL is incredibly useful. But
-we must not put it onto a pedestal and worship it.  
+This is not to say the USL isn't useful.  It is incredibly useful. But we must
+not put it onto a pedestal and worship it.  
 
-I'd also like to note that one could easily conjecture and analyze other
-USL-like models. For example, many computer algorithms, such as those
-that might perform pairwise interchange to cause the coherency penalty, can be shown
-by analysis to be $\mathcal{O}(n\log{}n)$ instead of $\mathcal{O}(n^2)$. Perhaps
-I could imagine that the quadratic $\kappa$ term doesn't really behave like its
-worst-case, and the term could be replaced by a logarithmic term, like so?
+I'd also like to note that you could easily conjecture and analyze other
+USL-like models. For example, many computer algorithms, such as those that might
+perform pairwise interchange to cause the coherency penalty,\footnote{Or queue
+management, if you believe that's the explanation of service time bloat.} can be
+shown by analysis to be $\mathcal{O}(n\log{}n)$ instead of $\mathcal{O}(n^2)$.
+You might intuit that the quadratic $\kappa$ term is too pessimistic, and could
+be replaced by a logarithmic term, like so:
 \begin{equation}
 X(N) = \frac{\lambda N}{1 + \sigma(N-1) + \kappa \log(N)(N-1)}
 \label{usl_log}
@@ -1213,43 +1218,51 @@ receives the same amount and rate of work to perform upon the same amount of
 data no matter the cluster size. (If you hold the dataset constant and increase
 the number of nodes, you'll get superlinear scalability.)
 
-% We've seen that the USL can be solved for a variety of dependent and independent
-% variables, such as response time (latency). Yet another way to think about the
-% USL is in terms of response time {\itshape reduction}, or speedup. I mentioned
-% this briefly while motivating the introduction of Amdahl's Law, but a system
-% that behaves like Amdahl's Law is probably less familiar to most readers.
-% However, it's a perfect model to use for massively parallel processing (MPP)
-% systems, which subdivide work and execute fractions of it in parallel, then
-% combine the intermediate results into a final answer. In such a system, you can
-% vary the degree of parallelism, measure how latency reduces, and produce a model
-% of the system's scalability in terms of response time
-% reduction.\footnote{Throughput and concurrency do not enter into the equation;
-% you are not measuring aggregates of number of requests completed per time, but
-% merely measuring the response time of individual requests at a concurrency of 1,
-% by definition.}
-% 
-% To accomplish this, I need to make explicit what's been a bit bundled together
-% into the USL when applied to hardware scalability. The assumption, not shown in
-% Equation \ref{usl} directly, is that as you scale the number of servers $N$, you
-% scale the drivers $D$ proportionately. In this way you hold the concurrency
-% constant at each server. Again, I'm using the term ``server'' in the queueing
-% theory sense of the word, e.g. nodes in the cluster, CPUs in the motherboard,
-% degree of parallelism in the MapReduce job. Making this explicit in the USL
-% looks like the following:
-% \begin{equation}
-% X = \frac{\lambda \frac{D}{N}}{1 + \sigma(\frac{D}{N} - 1) + \kappa
-% \frac{D}{N}(\frac{D}{N}-1)}
-% \label{usl_drivers}
-% \end{equation}
-% 
-% Naturally, if the purpose is to measure speedup of individual requests, this
-% becomes
-% \begin{equation}
-% X = \frac{\lambda \frac{1}{N}}{1 + \sigma(\frac{1}{N} - 1) + \kappa
-% \frac{1}{N}(\frac{1}{N}-1)}
-% \label{usl_speedup}
-% \end{equation}
+I've shown that the USL can be solved for a variety of variables, such as
+response time (latency). Yet another way to think about the USL is in terms of
+response time {\itshape reduction}, or speedup. I mentioned this briefly while
+motivating the introduction of Amdahl's Law, but a system that literally behaves
+like Amdahl's Law is probably less familiar to most readers.  However, it's a
+perfect model to use for massively parallel processing (MPP) systems, which
+subdivide work and execute fractions of it in parallel, then combine the
+intermediate results into a final answer. In such a system, you can vary the
+degree of parallelism, measure how latency reduces, and produce a model of the
+system's scalability in terms of response time reduction.\footnote{Throughput
+and concurrency do not enter into the equation; you are not measuring aggregates
+of number of requests completed per time, but merely measuring the response time
+of individual requests at a concurrency of 1, by definition.}
 
+To accomplish this, I need to make explicit what's been a bit bundled together
+into the USL when applied to hardware scalability. The assumption, not shown in
+Equation \ref{usl} directly, is that as you scale the number of servers $N$, you
+scale the drivers proportionately, and each request is served by a single
+server. In this way you hold the concurrency constant at each server. Again, I'm
+using the term ``server'' in the queueing theory sense of the word, e.g. nodes
+in the cluster, CPUs in the motherboard.
+
+If you solve the USL to represent response time as a function of the degree of
+parallelism in an MPP job, of course you'll find that it's just the inverse of
+the speedup. And the standard form of the USL is equivalent to speedup in the
+MPP sense, so the response time of individual requests becomes:
+\begin{equation}
+R(N) = \frac{1 + \sigma (N-1) + \kappa N (N-1)}{\lambda N}
+\label{usl_speedup}
+\end{equation}
+
+Characteristic response time curves in an MPP system, then, are as follows. A
+perfectly linear system will result in speedup towards an asymptote of zero. A
+system with serialization will speedup towards an asymptote of the serial
+fraction. And a system with retrograde scalability due to service time bloat
+will actually exhibit, well, {\itshape bloat}. It looks like this:
+\begin{center}
+\includegraphics[width=.85\linewidth]{scalability/mpp-speedup}
+\end{center}
+
+You can use that model just like any other form of the USL: to evaluate
+scalability, predict performance beyond what you can observe, figure out whether
+a system is scaling well enough and why, and so on.
+
+\newpage
 \section{Conclusions}
 
 The Universal Scalability Law is a wonderfully versatile, easy-to-apply, yet
@@ -1310,6 +1323,8 @@ knowing {\itshape why} it happens.
 \item Never trust a scatterplot with an arbitrary curve fit through it unless
 you know why that's the right curve. Don't confuse the USL, hockey stick charts
 from queueing theory, or other charts that just happen to have similar shapes.
+Know what shape various plots should exhibit, and suspect bad measurements or
+other mistakes if you don't see them.
 \end{itemize}
 
 The USL succeeds because it encapsulates many different effects implicitly, and
@@ -1320,7 +1335,7 @@ in its predictive ability. But remember: as Neil Gunther says, ``Models don't
 get confused, only modelers do.''
 
 Many thanks to Dr. Neil Gunther, Cary Millsap, John Allspaw, Adrian Cockcroft,
-John Miller, Dr.  Nathaniel Schwartz, Vadim Tkachenko, Peter Zaitsev, Dr.
+John Miller, Dr.  Nathaniel Schwartz, Vadim Tkachenko, Mark Callaghan, Peter Zaitsev, Dr.
 Jayanta Choudhury, and others too numerous to mention. They deserve credit for
 most of the things I've gotten right in this book. The errors, confusions, and
 thickheadedness are all mine. I also beg Neil Gunther's perpetual forgiveness in
