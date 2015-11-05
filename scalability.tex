@@ -81,23 +81,23 @@ has been for me.
 
 \section{What is Scalability?}
 
-Scalability is ambiguous for many people---a vague term often tossed about in
-conference presentations, for example. It's often used in ways confusingly
-similar to performance, efficiency, capacity, availability, and many other terms
-related to making things big and fast.
+Scalability is ambiguous for many people---a vague term often bandied about in
+conference presentations, for example. It can be confusingly similar to
+performance, efficiency, capacity, availability, and many other terms related to
+making things big and fast.
 
 Wikipedia's definition of scalability, borrowed from a 2000 paper by Andr\'e B.
-Bondi, is ``the capability of a system, network, or process to
-handle a growing amount of work, or its potential to be enlarged in order to
-accommodate that growth.'' This isn't wrong, but it's still a bit informal, and
-this book needs a more formal definition.
+Bondi, is ``the capability of a system, network, or process to handle a growing
+amount of work, or its potential to be enlarged in order to accommodate that
+growth.'' This isn't wrong, but it's still a bit informal, and this book needs a
+more formal definition.
 
 Dr. Neil J. Gunther provides one such definition: scalability is a {\itshape
 function}. I read his books and heard him speak, but it was still a year or so
-before I understood. {\itshape Scalability can be defined as a
-mathematical function}, a relationship between independent and dependent
-variables (input and output). This is the type of formal definition you need to
-model and analyze scalability.
+before I understood. {\itshape Scalability can be defined as a mathematical
+function}, a relationship between independent and dependent variables (input and
+output). This is the type of formal definition you need to model and analyze
+scalability.
 
 The most important part of understanding such a scalability model is choosing
 the correct variables to describe the way systems really operate.  Bondi's
@@ -113,12 +113,10 @@ scalability. Useful ways to think about work include, to mention a few,
 
 Each of these can play sensible roles in the scalability function, depending on
 how you view it. For example, it's quite common to configure the number of
-threads a benchmark runs to send requests to a database. The benchmark usually
-sends requests as fast as possible, assuming zero think time, so the arrival
-rate is related to, but not strictly controlled by,\footnote{Because it is
-determined by how quickly the database finishes each request.} the benchmark
-configuration.
-
+threads a benchmark uses to send requests to a database. The benchmark usually
+sends requests as fast as possible with zero think time, so the arrival rate is
+related to\footnote{But not strictly controlled by, because it is determined by
+how quickly the database finishes each request.} the benchmark configuration.
 You could say that the amount of work requested is the input to the benchmark's
 scalability function, and the completion rate is the output.
 
@@ -128,12 +126,12 @@ vary the cluster size and hold constant the load per node. In this case, the
 independent variable is the system size and the dependent variable is the
 completion rate.
 
-In most cases I've analyzed, either size or load are the sensible
-independent variables for the scalability function. So for the purposes of this
-book, I'll consider scalability to be {\itshape a function of size or load}.
-The dependent variable will be the rate at which the system can complete work,
-or {\itshape throughput}. The hope is that the system should complete more work
-as size or load grow, so it should be an increasing function.
+In most cases I've analyzed, either size or load is the sensible independent
+variable for the scalability function, meaning that scalability is {\itshape a
+function of size or load}.  The dependent variable will be the rate at which the
+system can complete work, or {\itshape throughput}. The hope is that the system
+should complete more work as size or load grows, so it should be an increasing
+function.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/size-vs-load}
 \end{center}
@@ -391,24 +389,25 @@ to queueing---the job is already out of the queue and in service.
 These effects are clearly visible in the USL when it enters the region of
 retrograde scalability. An increase in service time is the only thing that can
 explain retrograde scalability. If the service time remained constant,
-throughput would be a flat line. Queue length and queue wait time cannot explain
-retrograde scalability; queueing can only cap throughput, not decrease it.
+throughput would approach a flat line. Queue length and queue wait time cannot
+explain retrograde scalability; queueing can only cap throughput, not decrease
+it.
 
 \newpage
 \section{Measuring Scalability}
 
-To recap, at this point we've figured out the right dimensions for a formal model
-of scalability that seems to behave as we know real systems behave, and examined
-Neil Gunther's USL, which fits that framework well and gives us an equation for
-scalability. (Are you excited yet?)
+To recap, at this point we've figured out the right dimensions for a formal
+model of scalability that seems to behave as we know real systems behave, and
+examined Neil Gunther's USL, which fits that framework well and gives us an
+equation for scalability. (Are you excited yet?)
 
 Now what can you do with it?
 
-Great question! It turns out you can do a lot of extremely useful things with the
-USL.  Unlike a lot of models of system behavior, this one is actually practical
-to apply in the real world. That's the real genius of it, in fact. Not only is
-the equation uncomplicated, but the variables it describes are easy to get most
-of the time.
+Great question! It turns out you can do a lot of extremely useful things with
+the USL.  Unlike a lot of models of system behavior, this one is actually
+practical to apply in the real world. That's the real genius of it, in fact. Not
+only is the equation uncomplicated, but the variables it describes are easy to
+get most of the time.
 
 I use the USL mostly for modeling system scalability, by working backwards from
 observed system behavior and estimating the likely coefficients. To accomplish
@@ -605,7 +604,7 @@ coefficients are zero, the equation is simplified, removing the causes of
 nonlinear behavior. One of the nice things about Equation \ref{r_n} is that you
 can now see the effects of contention (linearly increasing queueing delay) and
 coherency (quadratically increasing service time) on residence time.  Here's the
-same data I used previously, now inverted and used to predict response time. The
+same data I used previously, rearranged to predict response time. The
 dashed lines show linear and Amdahl response time scaling for the same
 $\lambda$:
 \begin{center}
@@ -696,12 +695,12 @@ diminishing returns and is climbing up the nose:
 \includegraphics[width=.85\linewidth]{scalability/not-a-function}
 \end{center}
 
-This isn't a simple function of throughput, as I said previously. That is why
+I'll repeat that this isn't a simple function of throughput alone. That is why
 you can't model it with a curve such as a parabola or an exponential function.
 The lower portion of the nose might {\itshape look like} an exponential curve,
 but it isn't. It's quite different.  Here's what happens if you try to fit an
-exponential function, such as Equation \ref{amdahl_r_x},
-through the benchmark's results.
+exponential function, such as Equation \ref{amdahl_r_x}, through the benchmark's
+results.
 \begin{center}
 \includegraphics[width=.85\linewidth]{scalability/cisco-x-v-r-amdahl}
 \end{center}
@@ -868,7 +867,7 @@ form of the USL, I obtain the following response time forecast:
 Using the estimated coefficients and the formula for response time from Equation
 \ref{r_n}, I can predict a mean response time
 of 0.00159 seconds at 20 threads. Let's imagine that this is unacceptable; I
-need mean response times to be 15ms or less. Solving the response time equation
+need mean response times to be 1.5ms or less. Solving the response time equation
 as a function of latency lets me use it to compute the maximum usable
 concurrency. The resulting equation has two roots; I'm only interested in the
 positive one:
@@ -1041,7 +1040,8 @@ it does in my experience.
 I'd also like to note that you could easily conjecture and analyze other
 USL-like models. For example, many computer algorithms, such as those that might
 perform pairwise interchange to cause the coherency penalty,\footnote{Or queue
-management, if you believe that's the explanation of service time bloat.} can be
+management, if you believe that's the explanation of service time bloat; see
+John Little's paper.} can be
 shown by analysis to be $\mathcal{O}(n\log{}n)$ instead of $\mathcal{O}(n^2)$.
 You might intuit that the quadratic $\kappa$ term is too pessimistic, and could
 be replaced by a logarithmic term, like so:
@@ -1162,7 +1162,8 @@ Finally, negative $\sigma$ coefficients can arise from data that includes some
 type of skew. For example, if you are measuring throughput at various levels of
 concurrency and something is inflating the apparent concurrency measurements
 (such as idling threads), all of your points will be shifted to the right on the
-scatterplot. This can cause apparently superlinear scaling.
+scatterplot. This can cause apparently superlinear scaling (though it's just bad
+data).
 
 \section{Other Scalability Models}
 
@@ -1174,7 +1175,7 @@ to be done on this topic.
 Some alternative theories, however, are just garbage. Chief amongst them is
 ``quadratic scalability.'' Observing that systems under increasing amounts of
 load will first increase in throughput, then level off and begin to decline,
-some people get the bright idea that they should ``fit a curve to it.'' The curve
+some people inevitably decide to``fit a curve to it.'' The curve
 is always a quadratic polynomial and the fitted curve ends up being a parabola
 opening downwards. Let's see how this looks on the Cisco benchmark data 
 once again:
@@ -1222,7 +1223,7 @@ possibility of a nonzero $\kappa$, which is far from rare. It is better to use a
 more capable model such as the USL.
 
 \newpage
-\section{Hardware and Software Scalability}
+\section{Modeling Hardware, Software, and MPP Systems}
 
 I mentioned that Neil Gunther actually defines two forms of the USL, one for
 hardware scaling and one for software. They're essentially the same equation,
@@ -1328,7 +1329,8 @@ you'll increase the maximum capacity twofold. Linear scalability is oft claimed
 but seldom delivered.
 \item Systems scale sublinearly because of contention, which adds queueing
 delay, and crosstalk, which inflates service times. The penalty for contention
-grows linearly and the crosstalk penalty grows quadratically.
+grows linearly and the crosstalk penalty grows quadratically. (An alternative
+to the crosstalk theory is that longer queues are more costly to manage.)
 \item Contention causes throughput to asymptotically approach the
 reciprocal of the serialized fraction of the workload. If your workload is 5\%
 serialized you'll never grow the effective speedup by more than 20-fold.
