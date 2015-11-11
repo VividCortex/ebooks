@@ -380,7 +380,7 @@
 	\begin{secfloat}{}%
 		\begin{adjustwidth}{-1.4in}{0in}%
 		\begin{tabular}{@{}p{1.2in}@{} @{}p{0.2in}@{} @{}>{\raggedright\setlength{\baselineskip}{1.8\baselineskip}}p{\textwidth}@{}}
-			\smash{\raisebox{-\height}{\includegraphics[width=1.2in,height=0.4in]{section}}} && {\fntsection #1} \\
+			\smash{\raisebox{-\height}{\includegraphics[width=1.2in,height=0.4in]{img/section}}} && {\fntsection #1} \\
 		\end{tabular}
 		\end{adjustwidth}%
 	\end{secfloat}%
