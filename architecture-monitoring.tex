@@ -13,23 +13,22 @@
 
 %% Required image for "About VividCortex"
 \aboutvc{img/presenter}
-
+\nopagebreak
 %% Required resource info
 \resourceleft%
-	{Everything You Need To Know About Queueing Theory}
-	{This highly accessible
-	introduction demystifies queueing theory without using pages full of equations,
-	helping you build intuition about it.}
-	{img/queueing-theory}
-	{https://www.vividcortex.com/resources/queueing-theory/}
+	{Practical Scalability Analysis with the Universal Scalability Law}
+	{The Universal Scalability Law models how systems perform as they grow. This
+	52-page book shows how to use it for practical
+	purposes such as capacity planning.}
+	{img/scalability}
+	{https://www.vividcortex.com/resources/universal-scalability-law/}
 \resourceright%
-	{Case Study: SendGrid}
-	{VividCortex is the go-to solution
-	for seeing what's happening in SendGrid's production systems. It has saved
-	months of effort and made query performance data available instantly to the
-	entire team.}
-	{img/sendgrid-thumbnail}
-	{https://www.vividcortex.com/resources/case-studies/sendgrid/}
+	{Case Study: Tradesy}
+	{After deploying VividCortex, Tradesy reported
+	``We were able to bring maximum CPU utilization spikes down from 80\% to
+	10\%. VividCortex is incredibly straightforward---it's the best MySQL tool I’ve ever used to monitor and analyze databases.''}
+	{img/tradesy-thumbnail}
+	{https://www.vividcortex.com/resources/tradesy/}
 
 \begin{document}
 \maketitle		% Build the cover page
@@ -49,13 +48,13 @@ sadly, some applications are designed with observability as an afterthought.
 Consequences include problems such as:
 
 \begin{itemize}
-\item It's cost-prohibitive to monitor the app
+\item It's cost-prohibitive to monitor the app.
 \item No existing systems can monitor the app, so you are forced to develop
-something custom
+something custom.
 \item The app's instrumentation is lacking, incompatible with popular monitoring
-systems, or impossible to correlate with other metrics
-\item Adding instrumentation proves impossible, and you have no visibility
-\item People, processes, or systems related to monitoring become a bottleneck for the organization
+systems, or impossible to correlate with other metrics.
+\item Adding instrumentation proves impossible, and you have no visibility.
+\item People, processes, or systems related to monitoring become a bottleneck for the organization.
 \end{itemize}
 
 Monitoring is one of many important factors of running apps at scale, and just
@@ -225,7 +224,7 @@ intuitively instrumented and observable with minimal developer effort, yet have
 that instrumentation be flexible if you want or need to change it.
 It's a goal that frameworks can help you achieve in some cases.
 
-\section{Ownership}
+\section{Service Ownership}
 
 Pick a service in your application. Who's responsible for running it in
 production? Is it the same people who wrote it?
@@ -356,9 +355,8 @@ cancel it automatically, you might suffer from the accumulation of
 open conditions that are no longer relevant, and serve to create enough noise
 that the value of the monitoring system rapidly decreases.
 
-\item[Static Thresholds] I've written extensively about why static thresholds
-are such a problem in dynamic systems. You can find several blog posts about
-this on the VividCortex blog if you're interested. Real systems are constantly
+\item[Anomaly Detection and Baselining] I've written extensively about why static thresholds
+are such a problem in dynamic systems. Real systems are constantly
 changing and always different from one another, so adaptive thresholds are a
 "must" in my opinion. Most alerts based on static thresholds should either be
 deleted or replaced with a more sophisticated anomaly detection system, such as
@@ -379,6 +377,49 @@ are known to be under maintenance is an indispensable feature at scale.
 You'll notice that this list is aspirational. Few, if any, monitoring systems
 or application code check all of these boxes. That's OK, but the more the
 better.
+
+\section{Inspecting Applications at Runtime}
+
+Building always-on instrumentation into your application's architecture, so you
+can connect to anything that's doing work and inspect it live, is a life saver.
+
+This type of capability is often built in at some level, but the question is how
+disruptive it is to use. For example, you can always use \texttt{gdb} to inspect
+a process while it's live, but that'll freeze it for the duration. Some
+programming languages, such as Erlang, are legendary for allowing nonintrusive
+inspection and modification of running processes, but that's the exception, not
+the norm.
+
+At VividCortex, we use Go for our internal and external services, and we've
+found it indispensable to use a few tools it offers, as well as providing our
+own through frameworks and libraries we've built. You'll probably need to do
+something similar, no matter what languages or frameworks you use. If you don't,
+you'll wish you had.
+
+Here are a few of the key techniques we've used:
+
+\begin{description}
+
+\item[Enabling Profiling] Go has a set of profiling libraries in the core
+packages, which let engineers introspect a running binary non-disruptively.
+These are extremely simple to include in a program (but not built in by
+default), and expose themselves through HTTP endpoints. You can use these to
+inspect CPU and memory profiles, among other things.
+
+\item[Building a Processlist] We've built a set of libraries that maintains
+state for each service, showing what requests it's handling, what states they're
+in, and enabling extra behaviors such as canceling them. These also expose an
+HTTP interface, so they're easy to wrap into simple web applications and other
+API clients.  The library is called \href{https://github.com/VividCortex/pm}{pm}
+and is open source.
+
+\end{description}
+
+As a result, we're able to answer questions such as ``what requests are in
+flight across all of our services?'' and take actions such as canceling a
+request that is causing problems for others. You can
+\href{https://www.vividcortex.com/blog/2014/11/06/inside-distributed-architecture/}{read more about this}
+on our blog.
 
 \section{Making Database Workload Observable}
 
@@ -422,10 +463,10 @@ digestible. This will not only reduce the burden on the monitoring system, but
 it will also group related queries together correctly, so you don't miss queries
 that are individually insignificant but are heavy hitters as a group.
 
-What you're trying to do is reduce entropy in the set of queries
-your database is handling. Reducing diversity of workload can be a good thing
-for many reasons, but in this book, I'll continue to focus on the
-consequences for observability.
+You're trying to reduce entropy in the set of queries
+your database is handling. Reducing diversity of workload can be good
+for many reasons, but in this book, I'll continue to focus on 
+observability.
 
 \section{Soothing Troubled Digestion}
 
@@ -657,7 +698,7 @@ blog post}
 \newpage
 
 \begin{about}	% Build "About VividCortex"
-VividCortex is a SaaS database performance monitoring platform. The database is the heart of most applications, but it's also the part that's hardest to scale, manage, and optimize even as it's growing 50\% year over year. VividCortex has developed a suite of unique technologies that significantly eases this pain for the entire IT department. Unlike traditional monitoring, we measure
+VividCortex is SaaS database performance monitoring that significantly eases the pain of database performance at scale for the entire IT department. Unlike traditional monitoring, we measure
 and analyze the system's work and resource consumption. This leads directly to better performance for IT as a whole, at reduced cost and effort.
 \end{about}
 \makeresources	% Build "Related Resources"
