@@ -515,7 +515,9 @@
 \newcommand{\makeresources}{%
 	{\fntresourcehead%
 	Related Resources From VividCortex\par}%
+	\nopagebreak
 	\setlength{\tabcolsep}{0.15in}%
+	\nopagebreak
 	\begin{tabular}[H]{m{2.75in} m{2.75in}}%
 		\includegraphics[width=2.75in]{\@resourcepicl} &%
 		\includegraphics[width=2.75in]{\@resourcepicr} \\
