@@ -1,0 +1,32 @@
+# export 8.5x5 inches
+
+# hockey.pdf
+> u=function(x){1/(1-x)}
+> plot(u,0,1,xlab="Utilization", ylab="Residence Time",ylim=c(0,25))
+> par(new=TRUE)
+> u=function(x){x/x}
+> plot(u, 0, 1, xlab="", ylab="", ylim=c(0,25), lty="dashed")
+
+# exponential.pdf
+f=function(x){exp(1)^-x}
+> plot(f,0,5, ylab="", xlab="",xaxt='n',yaxt='n')
+
+# Erlang response time stretch factor
+erlang_r=function(M, u){
+  erlangs = M * u;
+  erlangB = erlangs / (1+erlangs);
+  i = 2;
+  while ( i <= M ) {
+    eb = erlangB;
+    erlangB = eb * erlangs / (i + (eb * erlangs));
+    i = i + 1;
+  }
+  return(erlangB / (1 - u + (u * erlangB)));
+}
+erlang_r1=function(x){ erlang_r(1, x) }
+erlang_r2=function(x){ erlang_r(2, x) }
+erlang_r4=function(x){ erlang_r(4, x) }
+erlang_r8=function(x){ erlang_r(8, x) }
+erlang_r16=function(x){ erlang_r(16, x) }
+erlang_r32=function(x){ erlang_r(32, x) }
+erlang_r64=function(x){ erlang_r(64, x) }

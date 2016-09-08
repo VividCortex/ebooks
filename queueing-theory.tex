@@ -4,7 +4,7 @@
 % \makeprint
 
 %% Required to build cover page
-\title{Everything You Need To Know About}{Queueing Theory}
+\title{The Fundamentals Of}{Queueing Theory}
 \date{\today{} \textbullet{} Revision 3}
 \cover{queueing-theory/cover}
 
@@ -62,15 +62,6 @@ Knowing how to think about these kinds of questions will help you anticipate bot
 
 As for scope, the aim of this book is to help you get answers for common scenarios and point you to the right resources for other cases. I'll go into details where they help illuminate important concepts.
 
-I'll also try to make it fun in a nerdy way. In the end, I hope the Aaron Neville and Linda Ronstadt song will take on new meaning for you:
-
-\begin{quote}
-Don't know much\newline
-But I know I love queues\newline
-And that may be\newline
-All I need to know
-\end{quote}
-
 \section{What is Queueing Theory?}
 
 Queueing theory is a broad field of study that focuses on the many nuances of how waiting lines behave. It's a fascinating topic if you're of a theoretical bent. But it's highly relevant even if you're the impatient ``just answer my question!'' type, too.
@@ -98,7 +89,7 @@ In particular, human intuition is {\itshape linear}. Double the traffic, we thin
 The classic example you might recognize is the so-called hockey-stick curve. This is the most famous queueing theory picture of all time:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{queueing-theory/hockey-stick-1}
+\includegraphics[width=.75\linewidth]{queueing-theory/hockey}
 \end{center}
 
 This curve shows how a system's total response time increases as utilization increases. As utilization approaches 100\%, response time goes to infinity. The exact shape of this curve depends on the characteristics of the system and the work it's doing, but the general principle applies to pretty much all systems.
@@ -107,7 +98,7 @@ You'll get familiar with nonlinearity over the course of this book. You might ne
 
 \section{Queueing Systems in Real Life}
 
-Most introductions to queueing theory talk about abstract things and use jargon a lot. They'll usually discuss some real-life scenarios to help you understand the abstract things, but for some reason they always seem to pick bizarre situations I personally have never encountered\footnote{Often with British terminology, something about hiring lorries and abseiling}. Then they jump into discussions of Markovian something or other, and talk about births and deaths. At this point my eyes have usually glazed over.
+Most introductions to queueing theory talk about abstract things and use jargon a lot. They'll usually discuss some real-life scenarios to help you understand the abstract things, but for some reason they always seem to pick bizarre situations I personally have never encountered.\footnote{Often with British terminology, something about hiring lorries and abseiling.} Then they jump into discussions of Markovian something or other, and talk about births and deaths. At this point my eyes have usually glazed over.
 
 But life is full of queueing systems!
 \begin{itemize}
@@ -132,7 +123,7 @@ overlooked or misunderstood. To co-opt the old joke, the programmer with a
 problem thought, "I know, I'll just add a queue." (Now the programmer has
 unbounded problems.) Let's look at some of the consequences and purposes of
 queues.\footnote{I'm speaking here about queues as a concept, not specific technologies
-such as RabbitMQ or the like.}
+such as RabbitMQ.}
 
 Fundamentally, {\bfseries a queue is a mechanism for increasing availability}. A
 server is available when it can accept and service a request. In the formal
@@ -151,11 +142,12 @@ when in fact it's not available but might be in the future.}
 A consequence of increasing availability is that queues increase utilization.
 How so? The utilization improvement follows from work being ready to do. If
 requests can queue, then the system can move from servicing one request to the
-next with no idle time in between. If there's no such queue to hold ready-to-do
-work, newly arriving requests will be rejected, and when the system is finished
-with its current request, it'll lie idle until the next one happens to arrive.
-As a result, {\bfseries a queue is a mechanism for improving system
-utilization}.
+next with no idle time in between. The alternative, with no queue, is waste and
+lower utilization. To see why this is so, imagine there's no queue to hold
+ready-to-do work. Now, newly arriving requests will be rejected, so when the
+system is finished with its current request, it'll lie idle until the next one
+happens to arrive.  As a result, {\bfseries a queue is a mechanism for improving
+system utilization}.
 
 Because queues in front of servers increase their availability and utilization,
 they also improve their throughput. Throughput is the rate at which work is
@@ -165,13 +157,13 @@ the rate at which completed requests leave the system.\footnote{You may have
 heard that queues don't improve throughput. I've seen this claim, too, but only
 from people who are confusing the definition of throughput.}
 
-All good so far---but what's the downside? Latency. Queues add latency. Latency
-is the sum of the time the requests spend waiting in the queue and the time they
-spend being serviced. Intuitively, if they're waiting in the queue, they're
-waiting longer overall. (This intuition is correct.) Another effect of a
-queueing system is that keeping the queue itself consumes some resources. In a
-computer system, queues take resources such as memory and processor cycles; in a
-grocery store, they take floorspace.
+All good so far---but what's the downside? Latency. {\bfseries Queues add
+latency.} Latency is the sum of the time the requests spend waiting in the queue
+and the time they spend being serviced. Intuitively, if they're waiting in the
+queue, they're waiting longer overall. (This intuition is correct.) Another
+effect of a queueing system is that keeping the queue itself consumes some
+resources. In a computer system, queues take resources such as memory and
+processor cycles; in a grocery store, they take floorspace.
 
 To sum up, then, {\bfseries a queue is a mechanism that can improve
 availability, utilization, and throughput, but at the expense of latency and
@@ -189,16 +181,13 @@ One of the big wins is being able to recognize these systems, particularly in {\
 Why do things wait in queues anyway?
 
 It might seem like a dumb question with an obvious answer. ``Because there's more work to do than capacity to do it, silly!'' But that is not the right answer. Queueing happens even when there's more than enough capacity to do the work. This is part of what's really surprising and counterintuitive about queueing theory. This is so important that it needs to be emphasized:
-
-\begin{quote}
-Queueing happens even when there's more than enough capacity to do the work.
-\end{quote}
+{\bfseries Queueing happens even when there's more than enough capacity to do the work.}
 
 Let's take a simple example. Suppose a grocery store has a single checkout line and a single cashier. Suppose an average of one shopper per minute arrives at the line to pay for their groceries. Scanning, bagging and paying takes 45 seconds on average. Will there be queueing and waiting?
 
 Intuition says no, there won't. There will be, on average, 15 seconds of idle time for the cashier every minute. The cashier is only busy 75\% of the time! Of course no one has to wait in line, right?
 
-But that's not what really happens. In reality, there will be lots of shoppers waiting in line and they'll have to wait a long time!
+But that's not what really happens. In reality, there are lots of shoppers waiting in line and they have to wait a long time!
 
 Why on earth would this happen? It seems to make no sense at all.
 
@@ -235,18 +224,17 @@ All discussions of queueing theory analyze systems and processes in terms of thr
 
 These are abstract concepts that can be extended to every situation. There are also variations on the names. For example, servers are sometimes called ``stations,'' and sometimes I'll call a customer a ``job,'' a ``request,'' or a ``task'' in this book.
 
-Queueing theory views every system as interconnected sets of servers and queues, through which customers flow. Graphically, queues are represented as a set of stacked boxes, and servers/stations are shown as circles.  The simplest possible system is a single queue leading to a single server:
-
+Graphically, queues are represented as a set of stacked boxes, and servers/stations are shown as circles.  The simplest possible system is a single queue leading to a single server:
 \begin{center}
 \includegraphics[width=.375\linewidth]{queueing-theory/queue-and-server}
 \end{center}
 
 However, it's possible to have a variety of configurations, such as 1-to-many, many-to-many, many one-to-one, and chained systems:
-
 \begin{center}
-\includegraphics[width=.75\linewidth]{queueing-theory/queue-configurations}
+\includegraphics[width=.65\linewidth]{queueing-theory/queue-configurations}
 \end{center}
 
+Queueing theory views every system as interconnected sets of servers and queues, through which customers flow. 
 Once you're aware of this framework, you can decompose any system into networks of queues and servers and analyze them individually or separately.
 
 Now that you know that, what can you measure, analyze and predict about a queueing system?  There are a variety of important metrics and parameters:
@@ -302,13 +290,13 @@ Another extremely important equation is the relationship between residence time,
  R = W_q + S
 \]
 
-Residence time in a queueing system is usually what you'd think of as response time or latency. As this equation shows, it's the sum of two components.  Here's our earlier diagram showing the components again:
+Residence time in a queueing system is usually what you'd think of as response time or latency. As this equation shows, it's the sum of two components.  Here's our hockey stick diagram again:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{queueing-theory/hockey-stick-1}
+\includegraphics[width=.75\linewidth]{queueing-theory/hockey}
 \end{center}
 
-The dashed line in this chart is the service time, which is a floor on how quickly a request will complete, on average. Even with zero queueing, the service time takes some minimal amount of time. The wait time in the queue is responsible for the hockey stick curve. Later I'll show you how to calculate that.
+The dashed line in this chart is the service time, which is a floor on how quickly a request will complete, on average. Even with zero queueing, the service time takes some minimal amount of time. The wait time in the queue---the distance between the curve and the dashed line---is responsible for the hockey stick curve. Later I'll show you how to calculate that.
 
 \section{Describing Queueing Systems}
 
@@ -342,10 +330,10 @@ These letters mean the following.
 \item In the third place, you will find the number of servers. It'll either be an exact number, such as M/M/1 where there's explicitly 1 server, or you'll see an $m$ or $c$ as a variable placeholder, meaning a generalized system is being discussed and you'll plug the number of servers into the analysis.
 \end{itemize}
 
-The exponential distribution is very common in queueing analysis. Not only does it seem to describe real-world systems quite often, but it has nice mathematical properties that simplify analysis, and it's the safest bet when the real distribution is unknown. If you're not familiar with it, here's a chart of the exponential distribution's probability density function (PDF):\footnote{The PDF is what you get when you plot a histogram of a distribution.}
+The exponential distribution is very common in queueing analysis. Not only does it seem to describe real-world systems quite often, but it has nice mathematical properties that simplify analysis, and it's the safest bet when the real distribution is unknown. If you're not familiar with it, here's a chart of its PDF,\footnote{The PDF is what you get when you plot a histogram of a distribution.} or probability density function $\lambda e^{-\lambda x}$:
 
 \begin{center}
-\includegraphics[width=.75\linewidth]{queueing-theory/exp}
+\includegraphics[width=.75\linewidth]{queueing-theory/exponential}
 \end{center}
 
 The exponential distribution's useful properties include easy-to-calculate mean,
@@ -432,11 +420,12 @@ W_q = \frac{\rho S}{1 - \rho}
 You can also approximate service times and service time distributions for
 specific queueing configurations. Estimating approximate response times
 (latencies) for a queueing system is a useful skill, and it turns out it's not
-difficult to do in a napkin-math sort of way. For more on this, read this blog
-post by
-\href{http://perfdynamics.blogspot.com/2013/12/response-time-percentiles-for-multi.html}{Dr.
-Neil Gunther}. You can also find the details in the books referenced at the end
-of this book. For M/M/1 queueing systems, the heuristics are as follows:
+difficult to do in a napkin-math sort of way that's easy to remember. It's
+derived from the quantiles of the exponential distribution's cumulative
+distribution function, $-ln(1-F)/\lambda$.
+You can find the details in
+\href{http://perfdynamics.blogspot.com/2013/12/response-time-percentiles-for-multi.html}{Dr. Neil Gunther's blog post}.
+For M/M/1 queueing systems, the heuristics are as follows:
 
 \[
 R_{50} \approx \frac{2}{3} R
@@ -460,7 +449,7 @@ mean response time. You'll notice the denominators are all 3.
 
 \section{The Erlang Queueing Formulas}
 
-The simple equation $R=S/{1-\rho}$ that begins the previous section is for an M/M/1 queue with a single server. Computing queue lengths and wait times for multiple servers requires Erlang's formulas. Agner Erlang was a pioneer in telecommunications, and developed a variety of equations for predicting things like how many telephone lines would be needed to carry the expected volume of calls.
+The simple equation $R=S/(1-\rho)$ that begins the previous section is for an M/M/1 queue with a single server. Computing queue lengths and wait times for multiple servers requires Erlang's formulas. Agner Erlang was a pioneer in telecommunications, and developed a variety of equations for predicting things like how many telephone lines would be needed to carry the expected volume of calls.
 
 The Erlang formulas apply to a variety of different kinds of queueing systems. The one I've seen referenced most often is the Erlang C formula, because it applies to M/M/m queues. It uses an {\itshape Erlang} as a dimensionless unit of service demand or load, sometimes called the traffic intensity. An Erlang is another way of expressing average concurrency. For example, as the \href{http://en.wikipedia.org}{Wikipedia page} explains, a single phone circuit can carry 60 minutes of calls in an hour; if a group of circuits receives 100 6-minute calls in an hour, the traffic intensity in that hour will be 600 minutes, or 10 Erlangs. If there are more Erlangs of demand than servers, the queue is unstable.
 
@@ -501,7 +490,7 @@ Neil Gunther explores this in detail in Chapter 2 (specifically, Section 2.7) of
 
 Although this passes the sniff test, the results are only approximate. (They are exact for 1 and 2 servers.) This equation can underestimate the residence time by up to about 10\% in some cases.
 
-In 1977, Hirotaka Sakasegawa wrote a paper that describes the derivation and behavior of a more accurate approximation\footnote{See \href{https://github.com/VividCortex/approx-queueing-theory}{this GitHub repository} for a table of results and comparisons to Gunther's heuristic formula and the Erlang C formula, as well as the paper in PDF format.} for M/M/m and M/G/m queueing systems. Note that this one is for queue length, not service time.
+In 1977, Hirotaka Sakasegawa wrote a paper that describes the derivation and behavior of a more accurate approximation\footnote{See \href{https://github.com/VividCortex/approx-queueing-theory}{this GitHub repository} for a table of results and comparisons to Gunther's heuristic formula and the Erlang C formula, as well as the paper in PDF format.} for M/M/m and M/G/m queueing systems. Note that this one is for queue length, not residence time.
 \[
 L_q \approx \frac{ \rho^{\sqrt{2(M+1)}} }{ 1-\rho} \times \frac {CV_{IAT}^2 + CV_{ST}^2}{2}
 \]
@@ -544,13 +533,13 @@ Proper system design can create huge efficiency or waste!
 
 This illustrates the effect of specialization. In the combined-queue configuration, we're letting travelers go to the next available agent. Agents are generalists. In the separate-queue configuration, agents are specialized: they can only check documents for travelers in their own lines. This assumes travelers aren't allowed to skip lines and can't leave a queue after they enter it, which is a normal set of assumptions in most queueing theory analysis.
 
-In general, having lots of servers serving each queue pushes the so-called ``knee'' of the hockey stick curve toward higher utilization, letting you utilize resources better. Here's a graphic illustration of the effect:
+In general, having lots of servers serving each queue pushes the so-called ``knee'' of the hockey stick curve toward higher utilization, letting you utilize resources better. Here's an illustration of the effect:
 
 \begin{center}
 \includegraphics[width=.75\linewidth]{queueing-theory/multi-q}
 \end{center}
 
-This chart plots the response time curves of a systems with 1, 2, 4, 32, and 64 servers. The many-server curves remain flat far longer than the others. You can explore this chart on \href{https://www.desmos.com/calculator/iwaj9vujiu}{Desmos} if you like.
+This chart plots the response time curves of systems with 1, 2, and 16 servers. The many-server curves remain flat far longer than the others. You can explore this chart on \href{https://www.desmos.com/calculator/iwaj9vujiu}{Desmos} if you like.
 
 The chart also illustrates a rule of thumb you'll probably hear a lot in certain
 circles: the ``knee'' of the response time curve.\footnote{The location of the
@@ -656,9 +645,11 @@ studying queueing theory are the following:
 \item Understanding which relationships are linear and straightforward (Little's Law, Utilization Law, etc) and which depend on subtle aspects of system behavior such as arrival processes and their probability distributions.
 \end{itemize}
 If you reach the end of this book and understand only the following big-picture points, I'll be more than satisfied:
-\begin{quote}	% Compile quote
-To reduce queueing and waste, work to reduce utilization and variability, increase the number of servers, and avoid specialization.
-\end{quote}
+\begin{itemize}
+\item A queue is a mechanism to {\bfseries improve availability, utilization,
+and throughput, but at the expense of latency and resource consumption.}
+\item To reduce queueing and waste, try to {\bfseries reduce utilization and variability, increase the number of servers, and avoid specialization.}
+\end{itemize}
 This is not everything there is to know about queueing theory, but in my opinion it's everything you need to know.
 
 \section{Further Reading}
