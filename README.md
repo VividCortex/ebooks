@@ -12,7 +12,9 @@ A quickstart for Mac users for installing LaTeX:
 
 * Install BasicTex
 * Install Tex Live Utility from GitHub
-* Open a terminal and clone this repository, then `cd` into it and type `xelatex scalability.tex` or any other ebook name
-* Install packages using Tex Live Utility, as needed
-  * If you get an error like `! LaTeX Error: File 'footmisc.sty' not found` then install footmisc with Tex Live Utility
-  * The titletoc package is part of titlesec
+* Open a terminal and clone this repository, then `cd` into it and type `xelatex scalability.tex` or any other ebook name. At first you'll get an error; see below to fix.
+* Install packages using Tex Live Utility, as needed, to fix errors
+  * If you get an error like `! LaTeX Error: File 'footmisc.sty' not found` then abort the command with `Ctrl-D`, and install footmisc with Tex Live Utility.
+  * You'll need to do this a handful of times, canceling and re-running each time.
+  * The titletoc package is part of titlesec.
+* When you are victorious, you'll see a lot of messages in the terminal, followed by `Output written on scalability.pdf` or similar.
