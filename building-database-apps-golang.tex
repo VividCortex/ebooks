@@ -1,0 +1,294 @@
+\documentclass{vivid_layout}
+
+% \makeprint is for printing and trimming on paper, w/crop marks.
+% \makeprint
+
+%\usepackage{tikz}
+%\usetikzlibrary{datavisualization}
+%\usetikzlibrary{datavisualization.formats.functions}
+
+%% Required to build cover page
+\title{The Ultimate Guide to Building}{\fontsize{37.5pt}{15pt}\selectfont Database-Driven Apps With Go}
+\date{\color{white} \today{} \textbullet{} Revision 2}
+\cover{building-database-apps-golang/cover}
+
+%% Required to build "Meet the Author"
+\author{Baron Schwartz}{img/baron}
+
+%% Required image for "About VividCortex"
+\aboutvc{img/presenter}
+
+%% Required resource info
+\resourceleft%
+	{Everything You Need To Know About Queueing Theory}
+	{This highly accessible
+	introduction demystifies queueing theory without using pages full of equations,
+	helping you build intuition about it.}
+	{img/queueing-theory}
+	{https://www.vividcortex.com/resources/queueing-theory/}
+\resourceright%
+	{Case Study: SendGrid}
+	{VividCortex is the go-to solution
+	for seeing what's happening in SendGrid's production systems. It has saved
+	months of effort and made query performance data available instantly to the
+	entire team.}
+	{img/sendgrid-thumbnail}
+	{https://www.vividcortex.com/resources/case-studies/sendgrid/}
+
+\begin{document}
+\maketitle		% Build the cover page
+\begin{bio}		% Biographical info for "Meet the Author"
+Baron is a performance and scalability expert who participates in various
+database, opensource, and distributed systems communities. He has helped build
+and scale many large, high-traffic services for Fortune 1000 clients. He has
+written several books, including O'Reilly's best-selling High Performance MySQL.
+Baron has a CS degree from the University of Virginia.
+\end{bio}
+\tableofcontents	% Build the table of contents
+
+\section{Introduction}
+
+Congratulations! You’ve discovered the ultimate resource for writing database-driven applications in the Go programming language. Using Go to access databases brings you all the benefits of Go itself, plus an elegant database interface and a vibrant community of users and developers writing high-quality, open-source database drivers for you to use.
+
+What is Go, and why would you use it? Go is a modern language in the C family. It is elegant, simple, and clear to write and read, which makes it maintainable. It includes a garbage collector to manage memory for you. Its built-in features make it easy to write concurrent programs. These include goroutines, which you can think of as lightweight threads, and mechanisms to communicate amongst goroutines. At the same time, Go is strongly typed and compiles to self-contained binaries free of external dependencies, and is high-performance and efficient in terms of CPU and memory usage.
+
+Go is an excellent choice for systems programming, where you might otherwise choose Java, C or C++ for performance reasons. Typical tasks are building API servers, web servers and other high-performance networked systems, system utilities, databases, and micro-services architectures (APIs and services).
+
+Go is also very popular for tasks where you would otherwise use dynamic scripting languages such as Python and Ruby, which give you simplicity, clarity and flexibility but not high performance. Go gives you many of the best features of these languages, and some properties not present in any of them.
+
+Along with all of these benefits, Go includes a standard library of code for tasks such as encryption, networking, filesystem access, and database access. The database access library is called database/sql, and like the rest of Go, is elegant and minimal, with just enough batteries included. It does heavy lifting and repetitive tasks for you, such as connection pooling and retries on errors. But it doesn’t bury its internals in abstractions, so your code remains explicit and magic-free.
+
+Go’s database/sql library has excellent documentation and clear source code but leaves a great deal of learning to the user. Fortunately, you’ve found this book, which will save you a huge amount of time and mistakes! Contained within this book is years of collected wisdom from many experienced programmers, distilled to just what you need to know, when you need to know it.
+
+A note: as of the time of writing, Go 1.4 has just been released. If that’s an old version by the time you read this, you should be aware that there may be changes.
+
+Congratulations on choosing Go and database/sql, and on finding this book. Let’s get started right away!
+
+\section{What is database/sql?}
+
+database/sql is a package of functionality that’s included in Go’s standard library. It is the idiomatic, official way to communicate with a row-oriented database. Loosely speaking, it is designed for databases that are relational, or similar to relational databases (many non-relational databases work just fine with it too).
+
+database/sql provides much the same functionality for Go that you’d find in ODBC, Perl’s DBI, Java’s JDBC, and similar. However, it is not designed exactly the same as those, and you should be careful not to assume your knowledge of other database interfaces applies directly in Go.
+
+The database/sql package handles non-database-specific aspects of database communication. These are tasks that have to be handled in common across many databases, so they’re factored out into a uniform interface for you to use. Database-specific functionality is provided by drivers, which aren’t part of the standard library. Many excellent drivers are available in open-source form, and we will discuss those later.
+
+To a large extent, database/sql is database-agnostic. The benefits of using it are that your code will be as decoupled from the underlying database as possible, enabling easier portability and ensuring your code doesn’t get cluttered. This leads to better maintainability and understandability.
+
+The database/sql package is very idiomatic and Go-ish, following the Go philosophy of not hiding things behind too much abstraction. As a programmer, you’ll be in direct control over resource management, including memory management (although, like other things in Go, that is a very small burden due to the language design).
+
+What is it not? The primary thing you should be aware of is that it is definitely not an ORM (object-relational mapper) or other similar abstraction. Go, as a language, isn’t really oriented towards the type of programming that ORMs provide, and although there are some third-party libraries that attempt to provide ORM-like functionality and convenience helpers (e.g. populating structs with rows from the database), all of them fall short for various reasons.
+
+The database/sql package provides several types for you, each of which embodies a concept or set of concepts:
+
+DB. The sql.DB type represents a database. Unlike in many other programming languages, it doesn’t represent a connection to a database, but rather the database as an object you can manipulate. Connections are managed in an internal connection pool and are not exposed to you directly. This allows you to use databases that are actually connectionless, such as shared-memory or embedded databases, through the same abstraction without worrying about exactly how you communicate with them.
+
+Results. There are several data types that embody the results of database interactions: a sql.Rows for fetching multi-row results from a query, a sql.Row for a single-row result, and sql.Result for examining the effects of statements that modify the database.
+
+Statements. A sql.Stmt represents a statement such as DDL, DML, and the like. You can interact with them directly as prepared statements, or indirectly by using convenience functions on the sql.DB variable itself.
+
+Transactions. A sql.Tx represents a transaction with specific properties, in exchange for bypassing many of the usual conveniences such as the connection pool.
+
+We’ll see how to use all these data types, and the abstractions they present, in the following sections. Let’s get started with a quick-start: a “hello, world” program!
+
+\section{Your First database/sql Program}
+
+This section presents a quick introduction to the major functionality of database/sql in the form of a fully functioning Go program! Before you begin, ensure you have access to a MySQL database, as we’ll use MySQL for our examples in this book. If you don’t have an instance of MySQL that’s appropriate for testing, you can get one in seconds with the MySQL Sandbox utility.
+
+Create a new Go source file, hello\_mysql.go, with the following source code (download). You may need to adjust the connection parameters as needed to connect to your testing database. Note also that the example assumes the default test database exists and your user has rights to it:
+
+\begin{verbatim}
+package main
+
+import (
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
+)
+
+func main() {
+	db, err := sql.Open("mysql", "root:@tcp(:3306)/test")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	_, err = db.Exec(
+		"CREATE TABLE IF NOT EXISTS test.hello(world varchar(50))")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := db.Exec(
+		"INSERT INTO test.hello(world) VALUES('hello world!')")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rowCount, err := res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("inserted %d rows", rowCount)
+	rows, err := db.Query("SELECT * FROM test.hello")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for rows.Next() {
+		var s string
+		err = rows.Scan(&s)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("found row containing %q", s)
+	}
+	rows.Close()
+}
+\end{verbatim}
+
+Run your new Go program with go run hello\_mysql.go. It’s safe to run it multiple times. As you do, you should see output like the following as it continues to insert rows into the table:
+
+\begin{verbatim}
+Desktop $ go run hello_mysql.go
+2014/12/16 10:57:03 inserted 1 rows
+2014/12/16 10:57:03 found row containing "hello world!"
+Desktop $ go run hello_mysql.go
+2014/12/16 10:57:05 inserted 1 rows
+2014/12/16 10:57:05 found row containing "hello world!"
+2014/12/16 10:57:05 found row containing "hello world!"
+Desktop $ go run hello_mysql.go
+2014/12/16 10:57:07 inserted 1 rows
+2014/12/16 10:57:07 found row containing "hello world!"
+2014/12/16 10:57:07 found row containing "hello world!"
+2014/12/16 10:57:07 found row containing "hello world!"
+\end{verbatim}
+
+Congratulations! You’ve written your first program to interact with a MySQL server using Go. What might surprise you is that the code you’ve just run is not some kind of overly simplified, silly example. It is very similar to the code you’ll use in production systems under high load, including error handling. We’ll explore much of this code in further sections of this book and learn more about what it does. For now, we’ll just mention a few highlights:
+
+\begin{itemize}
+
+\item  You imported database/sql and loaded a driver for MySQL.
+
+\item  You created a sql.DB with a call to sql.Open(), passing the
+driver name and the connection string.
+
+\item  You used Exec() to create a table and insert a row, then inspect the results.
+
+\item  You used Query() to select the rows from the table, rows.Next() to iterate over them, and rows.Scan() to copy columns from the current row into variables.
+
+\item  You used .Close() to clean up resources when you finished with them.
+\end{itemize}
+
+Let’s dig into each of these topics, and more, in detail. We’ll begin
+with the sql.DB itself and see what it is and how it works.
+
+\section{Using a sql.DB}
+
+As mentioned previously, a sql.DB is an abstraction of a database.
+(A common mistake is to think of it as a connection to a database.)
+It exposes a set of functions you use to interact with the database. Internally, it manages a connection pool for you (a very important topic in this book), and handles a great deal of tedious and repetitive work for you, all in a way that’s safe to use concurrently from multiple goroutines.
+
+The intent of a sql.DB is that you’ll create one object to represent each database you’ll use, and keep it for a long time. Because it has a connection pool, it’s not meant to be created and destroyed continually. You should make your single sql.DB available to all the code that needs it.
+
+To create a sql.DB, as we saw in the previous section, you need to import a driver. We’ll cover drivers in more detail later. For now it’s enough to note that drivers are usually imported for side effects only. That’s why we bind their import name to the \_ anonymous variable, so their namespace isn’t usable from your code. All told, the necessary imports you need in your program’s main file are as follows:
+
+\begin{verbatim}
+import (
+    "database/sql"
+    _ "github.com/go-sql-driver/mysql"
+)
+\end{verbatim}
+
+Again we’re using our favorite MySQL driver as an example.
+
+You only need to import the driver once in one file, typically main.go or the equivalent (if you use some custom wrapper around database functionality, you’d likely import the driver inside that wrapper library). From here on, you’ll interact with the database/sql types, and it will interact with the library on your behalf, so you don’t need access to the driver directly. Behind the scenes, drivers use an init() function to register themselves with the database/sql package.
+
+Now, to actually create an instance of a sql.DB, you use sql.Open() with two arguments. The first is the driver’s name. This is the string that the driver registers with database/sql, and is typically the same as its package name to avoid confusion.
+
+The second argument is the connection string, or DSN (data source name) as some people call it. This is driver-specific and has no meaning to database/sql. It is merely passed to the driver you identify. It might include a TCP connection endpoint, a Unix socket, username and password, a filename, or anything else you can think of. Check the driver’s documentation for details.
+
+\subsection{How The Connection Pool Works}
+
+At this point you might think you have a connection to a database, but you don’t. You have only created an object and associated it with a driver. The database/sql package relies on the driver to create and manage individual connections, and keeps a pool of them. The pool is initially empty, and connections are created lazily when needed. The connection pool is vitally important to understand because it affects your program’s behavior greatly. That’s why we are including details about it early in this book.
+
+The way the pool works is fairly simple in concept. When you call
+a function that requires access to the underlying database, the function first asks for a connection from the pool. If there’s a free one, the pool gives it to the function. Otherwise it opens a new one. The connection is then owned by the function. When the function completes, it either returns the connection to the pool, or passes ownership of the connection to an object, which will release it back to the pool when it is finished.
+
+The specific functions you can call and how they’re handled follow, assuming a sql.DB variable named db:
+
+\begin{itemize}
+
+	\item db.Ping() returns the connection to the pool immediately.
+
+	\item db.Exec() returns the connection to the pool immediately, but the returned Result object has a reference to the connection, so it may be used later for inspecting the results of the Exec().
+
+	\item db.Query() passes ownership of the connection to a sql.Rows object, which releases it back to the pool when you’ve fully iterated all the rows or when .Close() is called.
+
+	\item db.QueryRow() passes the connection to a sql.Row, which releases it when .Scan() is called.
+
+	\item db.Begin() passes the connection to a sql.Tx, which releases it when .Commit() or .Rollback() is called.
+
+\end{itemize}
+
+Given that every connection is lazy-loaded as needed, how are you to validate that you can really use your sql.DB after creating it with sql.Open()? That is what db.Ping() is for. Idiomatic code looks like this:
+
+\begin{verbatim}
+db, err := sql.Open("driverName", "dataSourceName")
+if err != nil {
+    log.Fatal(err)
+}
+defer db.Close()
+err = db.Ping()
+if err != nil {
+    log.Fatal(err)
+}
+\end{verbatim}
+
+Now you know that your db variable is really ready to use, because Ping() has created a single connection and returned it to the pool.
+
+The above code, by the way, is not really idiomatic in one regard. Usually you’d do something more intelligent than just fatally logging an error. But in this book we’ll always show log.Fatal(err) as a placeholder for real error handling.
+
+A consequence of the connection pool is that you do not need to check for or attempt to handle connection failures. If a connection fails when you perform an operation on the database, database/sql will take care of it for you. Internally, it retries up to 10 times when a connection in the pool is discovered to be dead. It simply fetches another from the pool or opens a new one. This means that your code can be clean and free of messy retry logic.
+
+\subsection{Configuring the Connection Pool}
+
+Early versions of Go didn’t offer much control over the connection pool, but in Go version 1.2.1 and later, there are options to control it. (There was a bug in version 1.2’s connection pool; use at least version 1.2.1). These are as follows:
+
+\begin{itemize}
+
+	\item db.SetMaxOpenConns(n int). This sets the maximum number of connections the pool will open to the database. This includes connections that are in-use as well as connections that are idle in the pool. If you make a call that requests a connection from the pool, and there isn’t a free one and the limit is reached, then your call will block, potentially for a long time. The default limit is 0, which means unlimited.
+
+	\item db.SetMaxIdleConns(n int) sets the number of connections that will be kept idle in the pool after being released. The default is 0, which means that connections are not kept idle in the pool at all: they are closed when released from service. This can lead to a lot of connections being closed and opened rapidly, which is probably not what you want.
+
+\end{itemize}
+
+The key things to notice about the connection pool are that, depending on how you use connections and how you’ve configured the pool, it’s possible to have a few undesired behaviors:
+
+\begin{enumerate}
+
+	\item Lots of connection thrash, leading to extra work and latency.
+
+	\item Too many connections open to the database, leading to errors.
+
+	\item Blocking while waiting for a connection.
+
+	\item Operations can fail if the pool has 10 or more dead connections, due to the built-in limit of 10 retries.
+
+\end{enumerate}
+
+Most of the time, how you use the sql.DB influences these behaviors more than how you configure the pool. We’ll explore this throughout this book. For now, let’s move on to our next topic, fetching results from the database and doing useful things with them!
+
+\section{Fetching Result Sets}
+
+% TODO continue here
+% TODO: add bolding, italics, monospacing, and links to text up to this point
+% TODO: make the code samples have correct indentation
+
+\section{Conclusion}
+
+We hope you’ve enjoyed this book and that it helps you avoid lost time and other problems. After we learned database/sql through much production usage and reading of its source code, we wanted to give that knowledge to the world of Go programmers. If you have any suggestions for improvements, please use our website to contact us.
+
+\newpage
+
+\begin{about}	% Build "About VividCortex"
+VividCortex is a SaaS database performance monitoring platform. The database is the heart of most applications, but it's also the part that's hardest to scale, manage, and optimize even as it's growing 50\% year over year. VividCortex has developed a suite of unique technologies that significantly eases this pain for the entire IT department. Unlike traditional monitoring, we measure
+and analyze the system's work and resource consumption. This leads directly to better performance for IT as a whole, at reduced cost and effort.
+\end{about}
+\makeresources	% Build "Related Resources"
+\end{document}
