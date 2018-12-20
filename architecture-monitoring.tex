@@ -4,8 +4,8 @@
 % \makeprint
 
 %% Required to build cover page
-\title{\fontsize{32pt}{15pt}\selectfont Best Practices For Architecting}{\fontsize{30.2pt}{15pt}\selectfont Highly Monitorable Applications}
-\date{\color{white} \today{} \textbullet{} Revision 1}
+\title{\fontsize{32pt}{15pt}\selectfont How to Architect and Build}{\fontsize{30.2pt}{15pt}\selectfont Highly Observable Systems}
+\date{\color{white} \today{} \textbullet{} Revision 2}
 \cover{architecture-monitoring/cover}
 
 %% Required to build "Meet the Author"
@@ -43,93 +43,96 @@ Baron has a CS degree from the University of Virginia.
 
 \section{Introduction}
 
-Is your application easy to monitor in production? Many applications are, but
+Is your application easy to monitor in production? Many are, but
 sadly, some applications are designed with observability as an afterthought.
 Consequences include problems such as:
 
 \begin{itemize}
-\item It's cost-prohibitive to monitor the app.
+\item It's cost-prohibitive to monitor and troubleshoot the app in production.
+\item Developers don't know how the app works, so changes are riskier and more costly.
 \item No existing systems can monitor the app, so you are forced to develop
 something custom.
 \item The app's instrumentation is lacking, incompatible with popular monitoring
 systems, or impossible to correlate with other metrics.
-\item Adding instrumentation proves impossible, and you have no visibility.
-\item People, processes, or systems related to monitoring become a bottleneck for the organization.
+\item Adding instrumentation is impossible, limiting visibility.
+\item People, processes, and systems related to monitoring and observability become
+a productivity bottleneck, leading to shipping code more slowly with more frequent
+and costly problems.
 \end{itemize}
 
-Monitoring is one of many important factors of running apps at scale, and just
-like backups, security, auditability, and the like, it should ideally be
-considered in advance. In this way, you can make the tradeoffs consciously instead
-of accidentally.
+Observability is one of the most important factors of building and running services
+successfully at scale. It's best to build it in from the start, just
+like backups, security, auditability, and the like. In this way, you can make tradeoffs
+and plan for the future proactively, instead of accidentally.
 
 This ebook collects the experience of a variety of experienced architects and
-combines it with what customers have taught us about monitoring at
+combines it with what customers have taught us about observability at
 VividCortex. My hope is that you will be able to apply the best practices in
-this book to avoid pitfalls later, and create a highly monitorable
-architecture for your application, so you can get excellent visibility with
+this book to avoid pitfalls later, and create a highly observable
+application, so you can get excellent visibility and troubleshooting ability with
 minimal cost and effort. 
 
-My experience skews towards database
-monitoring needs. However, database monitoring 
-is a proper superset of general system monitoring, so the lessons
-contained in this ebook should apply to a variety of monitoring practices.
+My personal experience is rooted in database observability, where I've spent the last 15
+years of my professional career. What I've learned about database performance is
+entirely a result of understanding database observability. This is a special case
+of observability, with more challenges and constraints that make it harder than the general case. But I've built and run a variety of systems at scale, not just databases, and I hope you'll find my experiences relevant to what you're doing too.
 
-\newpage
+\section{What is Observability?}
+
+Over the last several years, observability has emerged into the popular consciousness
+of software engineers, SREs, and DevOps practitioners as one of the key attributes
+of well-built systems. But what is observability? In some circles, it's old wine in a
+new skin: just a faddish name for monitoring.
+
+I don't see it that way at all. Observability is a property of an application, and monitoring is an activity one does; observability is a noun and monitoring is a verb. There's a formal definition of observability from control theory, but it really is pretty simple: an application or system is observable if you can understand its inner workings by measuring its external behaviors. These behaviors are exposed through telemetry, which is the data emitted from instrumentation.
+
+In contrast, monitoring is the activity of analyzing the system's telemetry, and testing whether it's functioning correctly. Diagnostics is the process of determining what’s wrong with a system, and also relies on observability. In other words, monitoring tells you whether a system is working; observability helps you answer why.
 
 \section{What Should You Monitor?}
 
-One of the first things people ask when setting up and configuring
-monitoring systems is ``what should I monitor?'' This is an excellent guiding
-question to use for planning a highly monitorable application. I've given
-presentations on this topic, explaining my overall framework for understanding
-what metrics systems expose, what those metrics mean, and why it's not ideal
-to use that as a starting point. To learn more about this, you can
-\href{https://www.youtube.com/watch?v=zLjhFrUhqxg}{listen to a recording of my
-Velocity talk}. 
-Others have referenced and expanded this material too, including for example
-\href{https://www.datadoghq.com/blog/monitoring-101-collecting-data/}{Datadog's
-Monitoring 101 Series}.
+Observability is the foundation for monitoring, but it doesn't automatically make monitoring easy.
 
-The gist of those materials is this: you should not let the tail wag the dog in
-monitoring. Decide what information you need, which falls into categories
-such as work, resources, and events. Then plan to collect (or build
-in the ability to measure and expose) that information.
+One of the most common questions people ask when installing and configuring
+monitoring systems is ``what should I monitor?'' This is an excellent guiding
+question to use for discussing the goals and characteristics of a highly observable application. Any critical system typically tends to emit a lot of telemetry. Databases, for example, often have hundreds of status counters that can become metrics in a traditional monitoring system. How can you make sense of such complexity? What should you pay attention to? What's core and what's secondary?
+
+A formal framework really helps here. Without getting into the underlying theory, the framework that I've developed over many years (standing on the shoulders of giants) focuses on holistic observability in two directions: \emph{external quality of service} and \emph{internal sufficiency of resources}. Anchoring to these two perspectives, there are simple methodologies, which help reduce the complexity and make it manageable. As a result, you'll be able to \emph{measure what you should, not what you can}.
+
+Externally, you should measure whether the application or system is providing good quality of service to its customers. That is easy to understand if you restate it in a customer-centric viewpoint: customers (or users) are asking the system to do work for them; good quality of service is delivered when they get correct, fast answers. Thus, external quality of service is about measuring \emph{requests}.
+
+High-traffic services handle too many requests to measure individually, so you'll need aggregate measures that help you understand the population as a whole. The four golden signals of workload quality-of-service are:
+
+\begin{description}
+	\item[Concurrency] Concurrency is the total number of requests in process, either at an instant in time or over a duration. It's a dimensionless measure of load, which is another way of saying how much work the system is doing, in total. This is the single best measure of service demand placed on the service. Concurrency is the underlying metric of load metrics you're familiar with, such as load average and backlog.
+	\item[Error Rate] The error rate is the proportion of requests that aren't successful. Customers care about getting a successful, correct reply to their request.
+	\item[Latency] Second only to a successful response is a fast one. Latency is the measure of how long it takes for the customer or user to get their reply back, in units of seconds per request. It's best measured end-to-end. You can aggregate lots of individual requests' latencies over an interval; either by averaging them (less desirable) or by producing long-tail metrics such as the 99th percentile latency (better).
+	\item[Throughput] This is the rate of requests, expressed as requests per second over a time interval. In combination with latency and concurrency, it answers questions such as whether the service is getting slower, or just more heavily loaded; whether it's gotten stuck, or just stopped being sent traffic from upstream.
+\end{description}
+
+These four metrics together form the CELT acronym that we use at VividCortex to characterize workload quality-of-service from the end-user's point of view. These four are necessary and sufficient for detecting and explaining the nature of (but not always the causes of) every possible performance problem a system can experience. In other words, if these four golden signals don't show a problem, there isn't a problem (from the customer's point of view).
+
+You might have heard of the ``RED Method." CELT is essentially the same but uses standard terminology from performance theory, and adds the critical dimension of Concurrency (e.g. load, service demand). The RED metrics (rate, errors, duration) map to three of the four CELT metrics (throughput, errors, latency). What RED and CELT share in common is a belief that system performance has to be defined from the perspective of the customer or end user. Nobody whose requests are timing out and failing cares about how many nines of availability the server has or how busy its CPU is. As Charity Majors says, nines don't matter if users aren't happy.
+
+Is the external quality-of-service enough to measure? No, because it doesn't explain \emph{why} things are slow for customers. For that, you do need to measure the system or server itself. In particular, you need to measure the four key resources (CPU, memory, storage, and network) and for each of these, you need to measure three golden signals: Utilization, Saturation, and Errors. These three constitute \href{http://www.brendangregg.com/usemethod.html}{Brendan Gregg's USE method}, which is extremely helpful for navigating complex systems and determining whether they're the bottleneck. In addition, many systems have their own custom-built resources, such as thread pools or queues, which you should measure the same way.
+
+If you put these two together---the workload and its quality of service, plus the system's resources and their sufficiency to service the workload---you have a compact set of things to measure and monitor that's typically a lot smaller than the totality of what you could spend your time and effort examining.
+
+These signals---CELT plus USE---apply universally to all systems and software. Again, they're based on formal performance theory, bringing together the totality of things like queueing theory, Little's Law, and more. These seven golden signals are necessary and sufficient to understand your custom software as well as canned ``off-the-shelf" software such as your favorite database.
 
 In databases, in particular, the most important thing to measure is queries (or
-statements, or requests, or similar).  Queries are the database's unit of work.
-From a user's perspective, the query needs to complete correctly and quickly,
-and little else matters.  If you're not monitoring queries at a highly granular
-level, your database is little more than a black box.  From the operator's perspective,
-resource usage is also a primary type of monitoring data.
+statements, or requests, or similar).  Queries are the database's unit of work; measuring all of the database's queries is measuring its workload. Because databases are hard-to-monitor, it turns out that query monitoring is hard no matter how you do it, but later in this book I'll spend some time discussing how to do it the best you can.
 
-It turns out that query monitoring is hard no matter how you do it, but you can
-certainly make it even harder, and in this book I'll
-spend some time discussing how to avoid that issue.
-
-Executing a process is one of the OS's main jobs, so it's
-again it's important to measure processes and their work and
-resources. The OS is also responsible for managing the process's
-interface and communication with the outside world, as well as its access to
-resources, so those are particularly relevant too. And finally, the interplay
-of the processes and all of those resources is where problems often occur.
-
-So far we've considered ``canned'' software---the database and the OS---but what
-about \emph{your} software, the code you write and deploy? Yes, that needs to be
-monitorable too, and the same principles apply. Your code has work to do, and
-you need to measure and record that. It manages resources and has queues and
-interactions, and those are where many issues arise, so measure that too.
-
-It's a lot to do, and you can't possibly do or plan for it all in advance.
-That's why this book's focus is much more on \emph{guidelines} than on 
+Whew! That's a lot to think about.
+That's why this book's focus is much more on \emph{guidelines} to help you structure the world and divide-and-conquer observability problems, than on 
 lists of metrics or recipes and the like. As we dive deep, you'll see
-more examples that can illustrate specific cases and hopefully provide
+more examples that can illustrate specific cases and provide
 principles you can apply broadly.
 
 \section{Observability Tradeoffs}
 
-Monitoring, like any other function of an application, is a set of
-tradeoffs among many competing priorities in a high-dimensional space. In this
-section, I'll discuss some of those tradeoffs in hopes of helping you make
+Monitoring, like any other engineering activity, is a set of decisions and
+tradeoffs among many competing priorities. In this
+section, I'll discuss some of those tradeoffs, in hopes of helping you make
 choices that will lead to better outcomes.
 
 Here are a few of the most important tradeoffs I've seen:
@@ -142,16 +145,17 @@ likely end up with an app that is harder to deploy, operate, and monitor. These 
 be mutually exclusive goals---but if operability is an afterthought, you might
 make many decisions that \emph{do} preclude choices later.
 
-\item[Your Process vs. Their Software] All software, including monitoring
+\item[Your Process vs. Monitoring Software] All software, including monitoring
 systems, expresses a worldview and workflow. When these don't match your own,
-the choice is which gives: do you adopt your systems and practices to fit into
-the monitoring software, or do you require it to support your workflow?
+you have to prioritize: do you adopt your systems and practices to fit into
+the monitoring software, or do you require it to support your workflow? Do you build
+the observability you need, or do you just measure what you can with your monitoring software?
 
-\item[Cost vs. Visibility] In many cases, the more observable a system is, the
+\item[Cost vs. Observability] In many cases, the more observable a system is, the
 more expensive it is to monitor. This follows rather directly from the amount of
 monitoring data you can collect from the system and the granularity at which you
 collect it. Monitoring can be expensive if you collect a lot of data, but it can
-pay off. I've heard that Netflix's monitoring systems are a double-digit
+pay off. I've been told that Netflix's monitoring systems are a double-digit
 percentage of their overall operating budget. Netflix has even been described as
 a monitoring company that happens to stream movies. At the same time, Netflix's
 revenue per employee is one of the highest among publicly traded companies.
@@ -159,18 +163,17 @@ Coincidence? You decide.
 
 As another example, I know of many companies migrating from Oracle to PostgreSQL
 for cost reasons. The licensing cost is certainly much lower, but there's 
-no comparison between the amount of visibility Oracle provides and what you can
+no comparison between the amount of observability Oracle provides and what you can
 get in PostgreSQL. Is the compromise worth it? That's a decision you have to
 make.
 
-\item[Isolated Services vs. Monoliths] Microservices architectures are all the
-rage at the moment. We're big fans of some of the principles of microservices at
+\item[Isolated Services vs. Monoliths] Microservices architectures increasingly popular. We're big fans of some of the principles of microservices at
 VividCortex. But we've seen many customers struggle with the
 implications of monitoring microservices, especially when taken to extremes.
-Many small pieces create many sources of metrics, which means many metrics, which
-makes sophisticated monitoring systems a must. Likewise, lots of metrics leads
+Many small pieces create many sources of metrics, which means many metrics (high cardinality), which
+makes sophisticated and cost-effective monitoring systems a must. Likewise, lots of metrics leads
 to high cost, which I addressed in the previous point (cost versus
-visibility).
+observability).
 
 This point also applies to another current hot topic, containerization. If you
 ship tons of Docker containers and run lots of them in production, you have that
@@ -179,31 +182,27 @@ workload onto different databases, or you have some databases that handle
 multiple workloads---or even whether you want to run a few big powerful database
 servers versus lots and lots of small cheap ones.
 
-Cost and scale of metrics is not a small consideration; depending on the monitoring system you want
-to use, you might either find that you're forced to move to a more scalable
-alternative; invest insane amounts of time, money, and hardware; or spend
+Cost and scale of telemetry is not a small consideration. Depending on the monitoring system you want
+to use, you might find that you're forced to move to a more scalable
+alternative; invest insane amounts of time, money, and hardware; or pay
 through the nose. Monitoring isn't cheap no matter how you slice it, and when
 you multiply the number of ``things'' in your architecture by N, you 
-are multiplying your monitoring costs too.
+are multiplying your monitoring costs too. And systems that can't deal with high cardinality may start out easy and cheap, but when they hit the ``wall'' and max out their capabilities, it's a problem. Read the documentation and if they advise against creating high numbers of ``labels'' or ``tags'' or similar, consider whether that might become a problem as you scale.
 
-Any shared or combined resource might amortize the monitoring cost, but
-at the same time, it might reduce visibility. If you don't use containers, and a
-server runs many different kinds of services, then which one of them is
+To avoid having too many things to monitor, you can share or combine resources, such as colocating processes on a single server. This might reduce the monitoring cost, but
+at the same time, it might reduce observability. If you don't use containers, and a
+server runs many different kinds of services, then how do you know which one of them is
 responsible for a spike in network traffic or disk IO from that server? It might
 be hard to tell. (VividCortex has per-process metrics on CPU, IO, and the like;
 but not all monitoring systems are capable of providing this level of
 granularity).
 
-\item[Built-In Metrics vs. By Hook Or By Crook] If the software doesn't provide
-much visibility into the metrics you want, what lengths are you willing
+\item[Measure What You Can vs What You Should] If the software doesn't provide
+much visibility into the metrics you need, what lengths are you willing
 to go to get it? At VividCortex, for example, we've decided not to compromise on
-query-level visibility, which is why we use TCP traffic capture and decoding to
-measure every query a database gets over the network---and we don't need the
-database's cooperation to do this because the packet capture is an OS facility.
-TCP traffic capture is hard, and we don't recommend you build your own.
-But you might be able to do things like DTrace probes to capture your systems'
-work if they don't expose what you want to measure. It's just a matter of how
-important it is to you.
+query-level visibility, which is why we
+measure every query the database runs, without sampling.
+This is hard, and we don't recommend you reinvent our years of investments into low-overhead, secure database instrumentation. But we do recommend that you insist on complete capture of the data that matters (CELT + USE) in your applications, whether it's something you build yourself or third-party software.
 
 \end{description}
 
@@ -232,7 +231,7 @@ production? Is it the same people who wrote it?
 One of the core tenets of DevOps, which aligns well with microservices
 architectures, is that those who write the code are responsible for making sure
 it runs well in production too. This requires that they be
-able to monitor it in production.
+able to observe it in production. This is \emph{mandatory}. If the system isn't observable, full-lifecycle developer ownership is impossible, and DevOps breaks down and turns into silos.
 
 This book isn't the place to dive deeply into the many valid reasons for this
 viewpoint. But I do want to point out one of the main ways in which
@@ -243,18 +242,13 @@ what types of affordances those systems need; they won't know which log messages
 are helpful or which are missing; and so on. Operability is a feature, and they
 won't know how to make that feature work well.
 
-If you buy into this argument, it's quite clear that every service running in
-production needs to be monitored and logged, and the metrics and log events need
-to be accessible to people who have better things to do than SSH into
-servers. Application and system metrics need to be transparent, discoverable,
-and defined with the code so that deploying the code also deploys any necessary
-interconnects with monitoring services.
+If you agree with this argument, it's quite clear that every service running in
+production needs to be highly observable.
 
-\section{Common Monitoring Pitfalls}
+\section{Common Observability Pitfalls}
 
-In this section, I'll explore some of the problems I've seen, both in custom
-software and in off-the-shelf systems, on monitorability and how it
-is designed into or derived from those systems. To begin with, here are some
+In this section, I'll explore some of the observability problems I've seen, both in custom
+software and in off-the-shelf systems. To begin with, here are some
 topics that are mostly related to custom application code, but are also good
 advice for anyone building server software for someone else to use:
 
@@ -277,7 +271,7 @@ status variables, which signal the system's state, and configuration variables,
 which are inputs to the system's operation. For example, in both MySQL and
 Redis, the commands to get system status will return mixtures of configuration
 variables and status metrics. Such a metrics ``melting pot'' is a very common problem that usually
-requires custom code or exception lists (blacklist/whitelist) to identify which
+requires custom code or exception lists (blocklist/goodlist) to identify which
 variables are what.
 
 \item[Breaking Backwards Compatibility] If you change the meaning or dimensions
@@ -299,19 +293,11 @@ server's commandline options had identically named variables visible in the
 output of this command. But some were missing entirely, and others were present
 but under names that didn't match.
 
-\item[Missing KPIs] The list of crucial metrics for finding and diagnosing
-performance issues
-\href{http://www.xaprb.com/blog/2011/10/06/fundamental-performance-and-scalability-instrumentation/}{isn't
-that large}. Metrics such as utilization, latency, queue length, and the
-like can be incredibly valuable, and can be computed from fundamental metrics, if
-those are available. For an example, see the Linux \texttt{/proc/diskstats}
-metrics, which include values that you can analyze with
-\href{https://www.vividcortex.com/resources/queueing-theory/}{queueing theory},
-as I
-\href{http://www.xaprb.com/blog/2010/01/09/how-linux-iostat-computes-its-results/}{illustrated}
-on my personal blog. But you'd be surprised how many systems don't have any way
-to inspect these \href{http://www.brendangregg.com/usemethod.html}{key metrics},
-because people without much knowledge of good monitoring built the systems. For example,
+\item[Missing Golden Signals] The list of golden signals for finding and diagnosing
+performance issues isn't
+that large: it's just CELT and USE. But you'd be surprised how many systems don't have any way
+to inspect these key telemetry items,
+because people who didn't know or prioritize observability built the systems (perhaps because they're not going to be the ones on-call when it breaks). For example,
 PostgreSQL has a standard performance counter for transactions, but not for
 statements, so if you want to know how many queries (statements) per second your
 server is handling, you have to resort to much more complex alternatives. This
@@ -324,7 +310,7 @@ lack of a basic performance metric (throughput) is quite a serious oversight.
 The previous section listed some of the biggest sins I've seen in custom and off-the-shelf
 software applications, related to the ways they expose information about
 themselves. Another category of pitfalls is mostly applicable to
-monitoring software itself:
+\emph{monitoring software itself}:
 
 \begin{description}
 
@@ -347,27 +333,13 @@ the main thing is to have flap suppression at all.
 and activity without adding value. There are entire companies that specialize in
 consolidating, aggregating, and deduplicating alerts. You can build duplicate
 suppression into the source, however, through a variety
-of mechanisms, including simplistic ones such as blackout periods after raising an
+of mechanisms, including simplistic ones such as suppression periods after raising an
 alert.
 
 \item[Alert Cancellation] If an alert triggers a condition but there's no way to
 cancel it automatically, you might suffer from the accumulation of
 open conditions that are no longer relevant, and serve to create enough noise
 that the value of the monitoring system rapidly decreases.
-
-\item[Anomaly Detection and Baselining] I've written extensively about why static thresholds
-are such a problem in dynamic systems. Real systems are constantly
-changing and always different from one another, so adaptive thresholds are a
-"must" in my opinion. Most alerts based on static thresholds should either be
-deleted or replaced with a more sophisticated anomaly detection system, such as
-the one Preetam Jinka and I wrote about in our O'Reilly book,
-\href{https://www.vividcortex.com/blog/anomaly-detection-for-monitoring-a-new-ebook-in-collaboration-with-oreilly-and-ruxit}{Anomaly
-Detection for Monitoring}.
-
-Alternatively, many thresholds can be better expressed as time-to-live rather
-than a threshold on the metric itself. For example, rather than alerting when
-the disk is 90\% full, alert when its trend is such that it will fill up within
-a defined amount of time.
 
 \item[Scheduled Maintenance] Removing or suppressing alerts about systems that
 are known to be under maintenance is an indispensable feature at scale.
@@ -391,8 +363,8 @@ inspection and modification of running processes, but that's the exception, not
 the norm.
 
 At VividCortex, we use Go for our internal and external services, and we've
-found it indispensable to use a few tools it offers, as well as providing our
-own through frameworks and libraries we've built. You'll probably need to do
+found it indispensable to use a few tools it offers, as well as adding our
+own observability through frameworks and libraries we've built. You'll probably need to do
 something similar, no matter what languages or frameworks you use. If you don't,
 you'll wish you had.
 
@@ -406,7 +378,7 @@ These are extremely simple to include in a program (but not built in by
 default), and expose themselves through HTTP endpoints. You can use these to
 inspect CPU and memory profiles, among other things.
 
-\item[Building a Processlist] We've built a set of libraries that maintains
+\item[Building a Processlist] Any system or application that handles requests needs a processlist. In fact, it's the foundation of workload observability. We've built a set of libraries that maintains
 state for each service, showing what requests it's handling, what states they're
 in, and enabling extra behaviors such as canceling them. These also expose an
 HTTP interface, so they're easy to wrap into simple web applications and other
@@ -421,20 +393,20 @@ request that is causing problems for others. You can
 \href{https://www.vividcortex.com/blog/2014/11/06/inside-distributed-architecture/}{read more about this}
 on our blog.
 
-\section{Making Database Workload Observable}
+\section{Making Databases Observable}
 
-The topic of monitoring a database's workload (or really, any networked
+The topic of measuring a database's workload (or really, any networked
 service's workload) is important to consider separately, because it's so much
 harder than monitoring something simple like CPUs or network interfaces.
 
 To monitor such a service properly, as I mentioned previously, you need to
 monitor the \emph{work} it is doing. If you're just monitoring status counters,
 you're just looking at undifferentiated global vanity metrics that won't
-reveal whether anyone is having any issues. You need deep drilldown into metrics
-about specific types of work the system is doing.
+reveal whether anyone is having any issues. You need deep drilldown into
+the specific work the system is doing.
 
 The problem is that such services typically have very high event rates, so
-they're throwing off a lot of high-dimensional data if you capture and measure
+they're throwing off a lot of high-cardinality data if you capture and measure
 it all. For example, there are many examples of server software handling
 millions of queries per second (yes, even relational databases). If you record
 all of these requests and all of the information about them---SQL, user, current
@@ -451,8 +423,8 @@ others do it. Digesting results in a reduced volume of monitoring data that stil
 helps drill down into what's happening quite well. It's worth mentioning,
 however, that even this reduced set of data is still typically thousands of
 times larger than the usual system monitoring data you might be used to (CPU,
-disk, network, memory, etc). It's a very large and challenging monitoring
-workload.
+disk, network, memory, etc). It's a very large and challenging telemetry
+workload.\footnote{As an aside, VividCortex doesn't discard individual events: it retains samples of them, so you can start your exploration with cheap, fast metrics and then drill into samples with their high-cardinality dimensions retained in full detail.}
 
 What does this have to do with you, the application developer? Everything. The
 way your application uses your database will either work well with query
@@ -465,7 +437,7 @@ that are individually insignificant but are heavy hitters as a group.
 
 You're trying to reduce entropy in the set of queries
 your database is handling. Reducing diversity of workload can be good
-for many reasons, but in this book, I'll continue to focus on 
+for many reasons, but in this book, I'll continue to focus on the goal of
 observability.
 
 \section{Soothing Troubled Digestion}
@@ -596,29 +568,26 @@ than a straightforward statement.
 
 \end{description}
 
-\section{Monitoring Database-As-A-Service}
+\section{Observing Database-As-A-Service}
 
 There are several special considerations for hosted databases, commonly called
-DBaaS (database-as-a-service). The most popular such system is probably Amazon
+DBaaS (database-as-a-service). The most popular is Amazon
 RDS, which is available for a variety of database software such as MySQL,
 Oracle, and PostgreSQL. But there are also providers such as
 \href{http://compose.io}{Compose} and other cloud databases like Amazon
-DynamoDB.
+DynamoDB. 
 
 In these scenarios, you get nearly full client-level access to a
 database server, but no operating-system-level access at all. The database runs
 on a box that you can't SSH to or otherwise manipulate except through tightly
 defined avenues.
 
-The main tradeoff to consider is that in exchange for someone else handling the
-operation of the database for you, you get a lot less visibility and control
+The appeal and ROI of renting a fully-managed database is undeniable.
+The main tradeoff to consider is that in exchange, you get less observability and control
 over the database. In particular, you're limited to the monitoring data that the
 database provides, be that Performance Schema, pg\_stat\_statements, log files,
 or the like.  You're also subject to the limitations of this
-instrumentation. For example, in the currently available version 5.6 of Amazon
-RDS for MySQL, prepared statement performance statistics are completely lacking.
-If your application uses prepared statements, they'll be invisible through the
-Performance Schema.
+instrumentation.
 
 You're also dependent on the hosting provider for giving you host-level metrics
 about the underlying OS, such as CPU, IO, and network metrics. Those are
@@ -628,27 +597,18 @@ performance metrics from a client connection to the database, CPU performance
 metrics from Cloudwatch). And you then need to integrate and correlate those
 together.
 
-Your provider might offer you a hosted performance dashboard, but most of
-those are least-common-denominator and don't provide deep visibility. For
-example, Heroku provides a query dashboard, but it's essentially a
-straightforward SELECT from the underlying pg\_stat\_statements extension and
-doesn't provide query performance metrics \emph{over time}, like those you'd get
-from a tool like VividCortex.
-
 Are these limitations a problem? Not really. Just something to be aware of and
-plan for explicitly. You don't want to be surprised after the fact. You
-have much less visibility where it matters most, and you have to work harder for it. If a vendor
-solves this for you, expect it to come at additional cost.
+plan for explicitly. You don't want to be surprised after the fact.
 
 \section{Conclusions}
 
-Monitoring shouldn't be an afterthought, and \emph{monitorability is a feature},
+Observability shouldn't be an afterthought, and \emph{observability is a feature},
 just like security and usability. Databases, in particular, present
-extraordinary monitoring challenges. In today's high-scale, distributed
-application environment, deeply granular monitoring is more important than ever.
+difficult observability challenges. In today's high-scale, distributed
+application architectures, fine-grained observability is more important than ever.
 
 There's a lot you can do as you architect your application to ensure it's 
-easier to monitor in production. The options range from basic hygiene to some very
+easier to observe and monitor in production. The options range from basic hygiene to some very
 subtle points, which are difficult to tackle later and much cheaper if you
 address them up front.
 
@@ -658,12 +618,10 @@ shared experience solving database performance problems for ourselves and
 customers.  A few of the key takeaways are as follows:
 
 \begin{itemize}
-\item Learn what's important to monitor, rather than accepting what you're
-given, and find a way to get the metrics and data you need.
-\item Monitor whether systems are completing their assigned work with the
-desired speed and quality.
+\item Measure what you should, not what you can.
+\item Measure both externally customer-visible QoS and internal resource performance.
 \item Learn from the mistakes others have made, so you can avoid repeating them.
-\item Build KPIs into your applications and make them easy to integrate with
+\item Build the CELT+USE golden signals into your applications and make them easy to integrate with
 monitoring systems.
 \item Be extra sensitive to how you craft queries, lest you end up with a
 database workload that no monitoring system can handle well.
@@ -674,26 +632,6 @@ database workload that no monitoring system can handle well.
 Thanks to the talented engineering team at VividCortex for suggestions and
 reviews. Mistakes and shortcomings are solely mine; many of the things you might
 like about this book are their contributions.
-
-\section{Further Reading}
-
-I've referenced some blog posts and similar material throughout the book.
-Clearly monitoring is the topic of a much larger book, and there is too much
-reading for anyone to keep up with. Here are some of the most influential
-people, projects, and reading material I've encountered in my journeys around
-the monitoring ecosystem. Plus one extra for good measure.
-
-\begin{itemize}
-\item \href{http://www.kitchensoap.com/2015/05/01/openlettertomonitoringproducts/}{John Allspaw's open letter to monitoring companies}
-\item A former Google SRE's thoughts on
-\href{https://docs.google.com/document/d/199PqyG3UsyXlwieHaqbGiWVa8eMWi8zzAn0YfcApr8Q/edit}{alert
-design}
-\item \href{http://metrics.dropwizard.io/}{Coda Hale's Metrics library}
-\item \href{http://metrics20.org/}{The Metrics 2.0 project}
-\item \href{https://github.com/VividCortex/pm}{VividCortex's pm project} and the
-\href{https://www.vividcortex.com/blog/2014/11/06/inside-distributed-architecture/}{accompanying
-blog post}
-\end{itemize}
 
 \newpage
 
